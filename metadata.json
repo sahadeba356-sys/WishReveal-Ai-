@@ -1,0 +1,6 @@
+{
+  "name": "WishReveal Ai",
+  "description": "একটি স্মার্ট ও মজার প্ল্যাটফর্ম, যেখানে আপনি জানতে পারবেন আপনার বন্ধুর স্বপ্ন, পছন্দ এবং শেয়ার করা ইচ্ছা সম্পর্কে!",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
