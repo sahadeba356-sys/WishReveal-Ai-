@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -18,7 +19,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // --- Secure Password Hashing Utilities using Node Crypto (scrypt + random salt) ---
-// NEVER store passwords in plain text!
 function hashPassword(password: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const salt = crypto.randomBytes(16).toString('hex');
@@ -52,7 +52,7 @@ function generateSecureToken(prefix: string = 'tok'): string {
   return `${prefix}_${crypto.randomBytes(24).toString('base64url')}`;
 }
 
-// --- In-Memory Secure Store (Prepared for Database Migration) ---
+// --- In-Memory Store Schemas ---
 interface StoredUser {
   id: string;
   name: string;
@@ -92,7 +92,7 @@ interface StoredQuiz {
 interface StoredQuizResponse {
   id: string;
   quizId: string;
-  creatorId: string; // The owner who is authorized to view
+  creatorId: string;
   quizTitle: string;
   respondentName: string;
   respondentConsentGiven: boolean;
@@ -116,14 +116,13 @@ interface StoredWish {
   createdAt: string;
 }
 
-// In-Memory data collections (Development mode with production schema)
 const users: Map<string, StoredUser> = new Map();
 const sessions: Map<string, string> = new Map(); // token -> userId
 const quizzes: Map<string, StoredQuiz> = new Map();
 const quizResponses: Map<string, StoredQuizResponse> = new Map();
 const wishes: Map<string, StoredWish> = new Map();
 
-// Seed initial default mock user for development testing (clearly labeled)
+// Seed initial default mock user for development testing
 async function seedDevelopmentData() {
   const devPasswordHash = await hashPassword('Friendship2025!');
   const devUser: StoredUser = {
@@ -142,7 +141,6 @@ async function seedDevelopmentData() {
   };
   users.set(devUser.id, devUser);
 
-  // Seed sample private quiz
   const sampleQuiz: StoredQuiz = {
     id: 'quiz_sample_1',
     creatorId: devUser.id,
@@ -181,7 +179,6 @@ async function seedDevelopmentData() {
   };
   quizzes.set(sampleQuiz.id, sampleQuiz);
 
-  // Seed sample response for this quiz
   const sampleResp: StoredQuizResponse = {
     id: 'resp_sample_1',
     quizId: sampleQuiz.id,
@@ -208,7 +205,6 @@ async function seedDevelopmentData() {
   };
   quizResponses.set(sampleResp.id, sampleResp);
 
-  // Seed sample private wish
   const sampleWish: StoredWish = {
     id: 'wish_sample_1',
     userId: devUser.id,
@@ -230,7 +226,7 @@ async function startServer() {
 
   app.use(express.json({ limit: '1mb' }));
 
-  // --- Auth Middleware: Enforces authorization on private resources ---
+  // --- Auth Middleware ---
   interface AuthenticatedRequest extends Request {
     userId?: string;
     currentUser?: StoredUser;
@@ -254,24 +250,52 @@ async function startServer() {
     next();
   }
 
+  // --- Safe OpenAI Key & Model Resolution (Prevent accidental key leakage) ---
+  function getSafeOpenAiModel(): string {
+    const raw = process.env.OPENAI_MODEL;
+    if (!raw || raw.startsWith('sk-') || raw.includes('MY_') || raw.length > 35) {
+      return 'gpt-4o-mini';
+    }
+    return raw.trim();
+  }
+
+  function getOpenAIClient(): OpenAI | null {
+    let key = process.env.OPENAI_API_KEY;
+    if (!key || key.trim() === '' || key === 'MY_OPENAI_API_KEY') {
+      // Check if user set the key in OPENAI_MODEL by mistake
+      if (process.env.OPENAI_MODEL && process.env.OPENAI_MODEL.startsWith('sk-')) {
+        key = process.env.OPENAI_MODEL;
+      } else {
+        return null;
+      }
+    }
+    return new OpenAI({ apiKey: key.trim() });
+  }
+
+  function hasConfiguredOpenAi(): boolean {
+    const hasExplicitKey = Boolean(process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'MY_OPENAI_API_KEY');
+    const hasModelKey = Boolean(process.env.OPENAI_MODEL && process.env.OPENAI_MODEL.startsWith('sk-'));
+    return hasExplicitKey || hasModelKey;
+  }
+
   // --- 0. Backend Integration Status & OpenAI Endpoints ---
   app.get('/api/backend-status', (req, res) => {
-    const hasOpenAiKey = Boolean(process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'MY_OPENAI_API_KEY');
+    const hasOpenAiKey = hasConfiguredOpenAi();
     const hasGeminiKey = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'MY_GEMINI_API_KEY');
     res.json({
       isConfigured: false,
       storageType: 'in_memory_development',
       message: 'WishReveal Ai ব্যাকএন্ড ইন্টারফেস সফলভাবে প্রস্তুত। বর্তমান সেশনটি ইন-মেমোরি ডেভেলপমেন্ট স্টোরেজে চলছে। প্রোডাকশন ক্লাউড ডেটাবেস সংযোগের পূর্ব পর্যন্ত ডেটা ব্রাউজার সেশনে সক্রিয় থাকবে।',
       hasOpenAiKey,
-      openAiModel: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+      openAiModel: getSafeOpenAiModel(),
       hasGeminiKey,
       activeUsersCount: users.size,
     });
   });
 
   app.get('/api/openai/status', (req, res) => {
-    const hasKey = Boolean(process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'MY_OPENAI_API_KEY');
-    const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+    const hasKey = hasConfiguredOpenAi();
+    const model = getSafeOpenAiModel();
     res.json({
       isConfigured: hasKey,
       provider: 'OpenAI ChatGPT',
@@ -288,7 +312,6 @@ async function startServer() {
     try {
       const { name, email, password } = req.body || {};
 
-      // Server-side validation
       if (!name || typeof name !== 'string' || name.trim().length < 2) {
         return res.status(400).json({ error: 'সঠিক নাম প্রদান করুন (কমপক্ষে ২ অক্ষর)।' });
       }
@@ -303,14 +326,12 @@ async function startServer() {
 
       const normalizedEmail = email.trim().toLowerCase();
 
-      // Check if user already exists
       for (const u of users.values()) {
         if (u.email === normalizedEmail) {
           return res.status(400).json({ error: 'এই ইমেইল দিয়ে ইতিমধ্যে একটি অ্যাকাউন্ট তৈরি করা হয়েছে।' });
         }
       }
 
-      // Hash password using crypto scrypt with unique random salt (NEVER plain text!)
       const passwordHash = await hashPassword(password);
       const userId = generateSecureToken('usr');
 
@@ -321,8 +342,8 @@ async function startServer() {
         passwordHash,
         createdAt: new Date().toISOString(),
         privacySettings: {
-          isProfileSearchable: false, // Private by default
-          defaultQuizPrivate: true, // Private by default
+          isProfileSearchable: false,
+          defaultQuizPrivate: true,
           allowAiAnalysisConsent: true,
           allowAnonymousResponses: false,
           dataRetentionDays: 90,
@@ -331,7 +352,6 @@ async function startServer() {
 
       users.set(userId, newUser);
 
-      // Create session
       const token = generateSecureToken('sess');
       sessions.set(token, userId);
 
@@ -389,7 +409,6 @@ async function startServer() {
     }
   });
 
-  // --- 2. User Logout Endpoint ---
   app.post('/api/auth/logout', (req, res) => {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -404,8 +423,7 @@ async function startServer() {
     res.json(userSafe);
   });
 
-  // --- 3. Quiz Creation Endpoint ---
-  // Quizzes are PRIVATE BY DEFAULT
+  // --- 3. Quiz Endpoints ---
   app.post('/api/quizzes', authenticateToken, (req: AuthenticatedRequest, res) => {
     try {
       const { title, description, theme, questions, isPrivate, allowMultipleResponses, expiresAt } = req.body || {};
@@ -429,7 +447,7 @@ async function startServer() {
         description: (description && String(description).trim()) || '',
         theme: theme || 'dreams',
         shareToken,
-        isPrivate: isPrivate !== false, // Default to true (Private by default)
+        isPrivate: isPrivate !== false,
         allowMultipleResponses: Boolean(allowMultipleResponses),
         expiresAt: expiresAt || undefined,
         createdAt: new Date().toISOString(),
@@ -459,12 +477,10 @@ async function startServer() {
     }
   });
 
-  // Get user's own quizzes
   app.get('/api/quizzes/my', authenticateToken, (req: AuthenticatedRequest, res) => {
     const myQuizzes: StoredQuiz[] = [];
     for (const q of quizzes.values()) {
       if (q.creatorId === req.userId) {
-        // Count responses for this quiz
         let count = 0;
         for (const resp of quizResponses.values()) {
           if (resp.quizId === q.id) count++;
@@ -478,21 +494,18 @@ async function startServer() {
     res.json(myQuizzes);
   });
 
-  // Delete quiz (Only creator can delete)
   app.delete('/api/quizzes/:id', authenticateToken, (req: AuthenticatedRequest, res) => {
     const quiz = quizzes.get(req.params.id);
     if (!quiz) {
       return res.status(404).json({ error: 'কুইজটি পাওয়া যায়নি।' });
     }
 
-    // Strict Authorization Check: Only owner can delete
     if (quiz.creatorId !== req.userId) {
       return res.status(403).json({ error: 'এই কুইজটি মোছার অনুমতি আপনার নেই।' });
     }
 
     quizzes.delete(req.params.id);
 
-    // Cascading deletion of responses for this quiz
     for (const [respId, resp] of quizResponses.entries()) {
       if (resp.quizId === req.params.id) {
         quizResponses.delete(respId);
@@ -502,8 +515,7 @@ async function startServer() {
     res.json({ success: true, message: 'কুইজ এবং এর সকল রেসপন্স সফলভাবে মোছা হয়েছে।' });
   });
 
-  // --- 4. Quiz Response Submission (Public via Share Token) ---
-  // Public endpoint for friends to view the quiz questions (WITHOUT other responses)
+  // Public endpoint for quiz by share token
   app.get('/api/quizzes/public/:token', (req, res) => {
     const token = req.params.token;
     let foundQuiz: StoredQuiz | null = null;
@@ -519,12 +531,10 @@ async function startServer() {
       return res.status(404).json({ error: 'আমন্ত্রণ লিংকটি সঠিক নয় বা এর মেয়াদ শেষ হয়ে গেছে।' });
     }
 
-    // Check expiration
     if (foundQuiz.expiresAt && new Date(foundQuiz.expiresAt) < new Date()) {
       return res.status(410).json({ error: 'এই কুইজের সময়সীমা শেষ হয়েছে।' });
     }
 
-    // Sanitize: never return responses or internal creator details
     res.json({
       id: foundQuiz.id,
       title: foundQuiz.title,
@@ -537,7 +547,6 @@ async function startServer() {
   });
 
   // Submit response via share token
-  // SECURITY: Prevent unauthorized users from viewing private quiz answers
   app.post('/api/quizzes/public/:token/respond', (req, res) => {
     try {
       const token = req.params.token;
@@ -556,7 +565,6 @@ async function startServer() {
 
       const { respondentName, respondentConsentGiven, answers, voluntaryNote } = req.body || {};
 
-      // Server validation
       if (!respondentName || typeof respondentName !== 'string' || respondentName.trim().length < 2) {
         return res.status(400).json({ error: 'অনুগ্রহ করে আপনার নাম লিখুন।' });
       }
@@ -573,7 +581,7 @@ async function startServer() {
       const newResponse: StoredQuizResponse = {
         id: responseId,
         quizId: targetQuiz.id,
-        creatorId: targetQuiz.creatorId, // Authorized viewer
+        creatorId: targetQuiz.creatorId,
         quizTitle: targetQuiz.title,
         respondentName: respondentName.trim(),
         respondentConsentGiven: true,
@@ -589,7 +597,6 @@ async function startServer() {
 
       quizResponses.set(responseId, newResponse);
 
-      // SECURITY: Return only a confirmation message. NEVER return other responses!
       return res.status(201).json({
         success: true,
         responseId,
@@ -601,8 +608,7 @@ async function startServer() {
     }
   });
 
-  // --- 5. Viewing Responses (Strict Authorization Required) ---
-  // ONLY the quiz creator is authorized to access responses
+  // Authorized viewing of quiz responses
   app.get('/api/quizzes/:id/responses', authenticateToken, (req: AuthenticatedRequest, res) => {
     const quizId = req.params.id;
     const quiz = quizzes.get(quizId);
@@ -611,7 +617,6 @@ async function startServer() {
       return res.status(404).json({ error: 'কুইজটি পাওয়া যায়নি।' });
     }
 
-    // STRICT AUTHORIZATION CHECK
     if (quiz.creatorId !== req.userId) {
       return res.status(403).json({ error: 'অননুমোদিত অ্যাক্সেস: আপনি এই কুইজের উত্তরগুলো দেখার অধিকারী নন।' });
     }
@@ -626,8 +631,7 @@ async function startServer() {
     res.json(responses);
   });
 
-  // --- 7. Saving and Deleting Wishes Endpoints ---
-  // Wishes are private by default
+  // --- Wishes Endpoints ---
   app.get('/api/wishes', authenticateToken, (req: AuthenticatedRequest, res) => {
     const userWishes: StoredWish[] = [];
     for (const w of wishes.values()) {
@@ -652,8 +656,8 @@ async function startServer() {
         userId: req.userId!,
         text: text.trim().slice(0, 1000),
         category: (category && String(category).trim()) || 'সাধারণ',
-        isLocked: isLocked !== false, // default: true
-        isPrivate: isPrivate !== false, // default: true (Private by default)
+        isLocked: isLocked !== false,
+        isPrivate: isPrivate !== false,
         createdAt: new Date().toISOString(),
       };
 
@@ -671,7 +675,6 @@ async function startServer() {
       return res.status(404).json({ error: 'ইচ্ছাটি পাওয়া যায়নি।' });
     }
 
-    // STRICT AUTHORIZATION CHECK: Only author can delete
     if (wish.userId !== req.userId) {
       return res.status(403).json({ error: 'এই ইচ্ছাটি মোছার অনুমতি আপনার নেই।' });
     }
@@ -680,7 +683,7 @@ async function startServer() {
     res.json({ success: true, message: 'ইচ্ছাটি সফলভাবে মুছে ফেলা হয়েছে।' });
   });
 
-  // --- 8. Privacy Settings Endpoints ---
+  // --- Privacy & GDPR Endpoints ---
   app.put('/api/user/privacy', authenticateToken, (req: AuthenticatedRequest, res) => {
     const user = users.get(req.userId!)!;
     const { isProfileSearchable, defaultQuizPrivate, allowAiAnalysisConsent, allowAnonymousResponses, dataRetentionDays } = req.body || {};
@@ -696,7 +699,6 @@ async function startServer() {
     res.json(user.privacySettings);
   });
 
-  // Data Export (GDPR Portability)
   app.get('/api/user/export-data', authenticateToken, (req: AuthenticatedRequest, res) => {
     const { passwordHash: _, ...safeUser } = req.currentUser!;
     const userQuizzes: StoredQuiz[] = [];
@@ -716,7 +718,6 @@ async function startServer() {
     });
   });
 
-  // --- 9. Account Deletion (GDPR Right to Erasure) ---
   app.delete('/api/auth/delete-account', authenticateToken, (req: AuthenticatedRequest, res) => {
     const { confirmText } = req.body || {};
     if (confirmText !== 'DELETE' && confirmText !== 'মুছে ফেলুন') {
@@ -725,12 +726,10 @@ async function startServer() {
 
     const userId = req.userId!;
 
-    // 1. Delete all user wishes
     for (const [wId, w] of wishes.entries()) {
       if (w.userId === userId) wishes.delete(wId);
     }
 
-    // 2. Delete all user quizzes and their responses
     for (const [qId, q] of quizzes.entries()) {
       if (q.creatorId === userId) {
         quizzes.delete(qId);
@@ -740,12 +739,10 @@ async function startServer() {
       }
     }
 
-    // 3. Delete user sessions
     for (const [tok, uid] of sessions.entries()) {
       if (uid === userId) sessions.delete(tok);
     }
 
-    // 4. Delete user record
     users.delete(userId);
 
     res.json({
@@ -753,15 +750,6 @@ async function startServer() {
       message: 'আপনার অ্যাকাউন্ট ও সম্পর্কিত সকল ডেটা স্থায়ীভাবে মুছে ফেলা হয়েছে।',
     });
   });
-
-  // --- Helper to get initialized OpenAI Client ---
-  function getOpenAIClient(): OpenAI | null {
-    const key = process.env.OPENAI_API_KEY;
-    if (!key || key.trim() === '' || key === 'MY_OPENAI_API_KEY') {
-      return null;
-    }
-    return new OpenAI({ apiKey: key.trim() });
-  }
 
   // --- Shared AI Friendship Analysis Engine (OpenAI ChatGPT with Gemini & Demo Fallbacks) ---
   async function generateAiFriendAnalysis(

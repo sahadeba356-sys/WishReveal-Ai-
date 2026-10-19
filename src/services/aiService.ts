@@ -43,10 +43,10 @@ export interface AnalysisResult {
 }
 
 /**
- * Intelligent client-side demo analyzer used ONLY when no backend / API is connected.
- * Transparently labeled as demo mode so the app never falsely claims real AI was used.
+ * Intelligent client-side demo analyzer used when no backend / API is connected
+ * or when the user chooses to test offline demo mode.
  */
-function generateDemoAnalysis(req: AnalysisRequest): AnalysisResult {
+export function generateDemoAnalysis(req: AnalysisRequest): AnalysisResult {
   const { friendName, answers, voluntaryNotes } = req;
   const name = friendName.trim() || 'আপনার বন্ধু';
 
@@ -69,16 +69,16 @@ function generateDemoAnalysis(req: AnalysisRequest): AnalysisResult {
 
   if (isNatureTravel) {
     suggestions.push({
-      title: 'প্রাকৃতিক ও মুক্ত পরিবেশে ভ্রমণের প্রতি আগ্রহ',
+      title: 'প্রাকৃতিক ও মুক্ত পরিবেশে ভ্রমণের প্রতি গভীর আকর্ষণ',
       category: 'শখ ও আগ্রহ',
-      description: `${name}-এর দেওয়া উত্তরে প্রকৃতি, পাহাড়ি পরিবেশ বা খোলা সৈকতের প্রতি ভালো লাগা লক্ষ্য করা গেছে। তিনি চার দেয়ালের চেয়ে মুক্ত প্রকৃতির সান্নিধ্যে মানসিক শান্তি খুঁজে পাওয়ার সম্ভাবনা রয়েছে।`,
+      description: `${name}-এর দেওয়া উত্তরে প্রকৃতি, পাহাড়ি পরিবেশ বা খোলা সৈকতের প্রতি ভালো লাগা লক্ষ্য করা গেছে। তিনি চার দেয়ালের চেয়ে মুক্ত প্রকৃতির সান্নিধ্যে মানসিক শান্তি খুঁজে পান।`,
       supportingAnswer: travelAns,
       reasoning: 'ব্যবহারকারী স্বেচ্ছায় ভ্রমণ বিষয়ক প্রশ্নে পাহাড়ি কুয়াশা বা প্রাকৃতিক দৃশ্যপট নির্বাচন করেছেন।',
-      confidence: 'উচ্চ সম্ভাবনা (অনুমান)',
+      confidence: 'উচ্চ সম্ভাবনা (পরামর্শ)',
     });
     suggestedGifts.push({
-      name: 'ক্যাম্পিং থার্মাল ফ্লাস্ক বা মেটালিক ট্রাভেল বটল',
-      reason: 'ভ্রমণকালে সহজে উষ্ণ চা বা পানি বহনের জন্য এটি বেশ উপযোগী হতে পারে।',
+      name: 'ক্যাম্পিং থার্মাল ফ্লাস্ক বা ট্রাভেল মেটালিক ওয়াটার বটল',
+      reason: 'ভ্রমণকালে সহজে উষ্ণ পানীয় বা পানি বহনের জন্য উপযোগী।',
       supportingAnswer: travelAns,
     });
   }
@@ -87,14 +87,14 @@ function generateDemoAnalysis(req: AnalysisRequest): AnalysisResult {
     suggestions.push({
       title: 'আধুনিক প্রযুক্তি ও ইন্টারেক্টিভ গ্যাজেটে স্বাচ্ছন্দ্য',
       category: 'শখ ও আগ্রহ',
-      description: `${name} দৈনন্দিন জীবনে ডিজিটাল টুলস, স্মার্ট অ্যাক্সেসরিজ বা বন্ধুদের সাথে কো-অপ গেমিং সেশন পছন্দ করতে পারেন। এটি তার কর্মচঞ্চল ও আধুনিক দৃষ্টিভঙ্গির প্রতিফলন হতে পারে।`,
+      description: `${name} দৈনন্দিন জীবনে ডিজিটাল টুলস, স্মার্ট অ্যাক্সেসরিজ বা বন্ধুদের সাথে কো-অপ গেমিং সেশন পছন্দ করতে পারেন।`,
       supportingAnswer: hobbyAns,
-      reasoning: 'শখ ও উপহারের অপশনে আধুনিক গ্যাজেট বা গেমিং এক্সেসরিজ সম্পর্কিত উত্তর নির্বাচন করা হয়েছে।',
-      confidence: 'মাঝারি সম্ভাবনা (অনুমান)',
+      reasoning: 'শখ ও উপহারের অপশনে আধুনিক গ্যাজেট বা টেক এক্সেসরিজ নির্বাচন করা হয়েছে।',
+      confidence: 'মাঝারি সম্ভাবনা (পরামর্শ)',
     });
     suggestedGifts.push({
-      name: 'কম্প্যাক্ট ওয়্যারলেস পাওয়ার ব্যাংক বা প্রিমিয়াম ডেস্ক প্যাড',
-      reason: 'দৈনন্দিন ডিভাইস ব্যবহারকে আরও স্বাচ্ছন্দ্যময় ও গোছানো করতে সহায়তা করতে পারে।',
+      name: 'কম্প্যাক্ট ফাস্ট-চার্জিং পাওয়ার ব্যাংক বা প্রিমিয়াম ডেস্ক প্যাড',
+      reason: 'দৈনন্দিন ডিভাইস ব্যবহারকে আরও স্বাচ্ছন্দ্যময় করতে সহায়তা করে।',
       supportingAnswer: giftAns,
     });
   }
@@ -103,14 +103,14 @@ function generateDemoAnalysis(req: AnalysisRequest): AnalysisResult {
     suggestions.push({
       title: 'ভাবুক মনন ও গভীর আবেগমাখা স্মৃতিকে মূল্যায়ন',
       category: 'উপহার ও রুচি',
-      description: `${name} চাকচিক্যময় দামি উপহারের চেয়ে আন্তরিক ভালোবাসা, হাতে লেখা চিঠি বা সৃজনশীল শিল্পকে বেশি মূল্যবান মনে করার সম্ভাবনা রয়েছে।`,
+      description: `${name} চাকচিক্যময় দামি উপহারের চেয়ে আন্তরিক ভালোবাসা, হাতে লেখা চিঠি বা সৃজনশীল শিল্পকে বেশি মূল্যবান মনে করেন।`,
       supportingAnswer: giftAns,
       reasoning: 'উপহার বা স্বপ্নের প্রশ্নে বই, চিঠি বা স্মারক জাতীয় অপশন স্বেচ্ছায় নির্বাচন করা হয়েছে।',
-      confidence: 'উচ্চ সম্ভাবনা (অনুমান)',
+      confidence: 'উচ্চ সম্ভাবনা (পরামর্শ)',
     });
     suggestedGifts.push({
       name: 'হাতে লেখা আন্তরিক ফ্রেন্ডশিপ কার্ড ও মেটালিক বুকমার্ক',
-      reason: 'বই পড়ার অভ্যাস ও মানসিক গভীরতার সাথে এই উপহারটি সবচেয়ে নিখুঁতভাবে মানানসই হতে পারে।',
+      reason: 'বই পড়ার অভ্যাস ও মানসিক গভীরতার সাথে চমৎকারভাবে মানানসই।',
       supportingAnswer: giftAns,
     });
   }
@@ -119,10 +119,10 @@ function generateDemoAnalysis(req: AnalysisRequest): AnalysisResult {
     suggestions.push({
       title: 'বন্ধুদের সাথে গুণগত সময় ও আন্তরিক আড্ডা উপভোগ',
       category: 'বন্ধুত্বের মুহূর্ত',
-      description: `${name}-এর জন্য একান্তে দীর্ঘ আলোচনা, চা-কফি পানের আড্ডা বা একসাথে প্রিয় কোনো গান ও মুভি দেখার অভিজ্ঞতা একটি প্রিয় মুহূর্ত হতে পারে।`,
+      description: `${name}-এর জন্য একান্তে দীর্ঘ আলোচনা, চা-কফি পানের আড্ডা বা একসাথে প্রিয় কোনো গান ও মুভি দেখার অভিজ্ঞতা একটি প্রিয় মুহূর্ত।`,
       supportingAnswer: dreamAns,
       reasoning: 'আড্ডা ও জীবনের স্বপ্নের অংশে পারস্পরিক সম্পর্ক ও সুখের স্মৃতিকে অগ্রাধিকার দেওয়া হয়েছে।',
-      confidence: 'মাঝারি সম্ভাবনা (অনুমান)',
+      confidence: 'মাঝারি সম্ভাবনা (পরামর্শ)',
     });
     suggestedGifts.push({
       name: 'প্রিয় ক্যাফেতে সারপ্রাইজ কফি ডে-আউট বা কিউরেটেড মিউজিক মেমোরি বক্স',
@@ -140,14 +140,13 @@ function generateDemoAnalysis(req: AnalysisRequest): AnalysisResult {
     suggestions,
     suggestedGifts,
     friendshipTip: `টিপস: উপহার চূড়ান্ত করার আগে কোনো স্বাভাবিক আড্ডায় হালকাভাবে ${name}-এর বর্তমান আগ্রহ বা প্রয়োজনের কথা জেনে নেওয়া সবচেয়ে বুদ্ধিমানের কাজ হবে!`,
-    demoNotice: 'ডেমো মোড: ব্যাকএন্ড সার্ভার বা লাইভ এআই কী অনুপলব্ধ থাকায় এটি একটি স্থানীয় ডেমো অ্যালগরিদম দিয়ে প্রস্তুত করা হয়েছে। কোনো ভুয়া বাস্তব AI দাবি করা হচ্ছে না।',
+    demoNotice: 'ডেমো মোড: ব্যাকএন্ডে OPENAI_API_KEY কনফিগার করা না থাকায় এটি একটি ডেমো অ্যালগরিদম দিয়ে প্রস্তুত করা হয়েছে। লাইভ ChatGPT উত্তরের জন্য OPENAI_API_KEY সেট করুন।',
   };
 }
 
 /**
- * Service function to request AI analysis from the OpenAI-powered backend.
- * First calls the backend proxy route /api/analyze-friend-wishes (or /api/openai/analyze).
- * Propagates server errors so the UI can display friendly error handling and a retry option.
+ * Service function to request AI analysis from OpenAI-backed backend.
+ * Properly propagates error responses so the UI can display error handling and retry option.
  */
 export async function analyzeFriendWishes(
   req: AnalysisRequest,
@@ -224,6 +223,3 @@ export async function askOpenAiFriendAdvisor(
     providerName: data.providerName || 'OpenAI ChatGPT',
   };
 }
-
-export { generateDemoAnalysis };
-

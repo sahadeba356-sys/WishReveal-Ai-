@@ -23,6 +23,7 @@ import { CreateQuizModal } from './components/CreateQuizModal';
 import { QuizResponsesModal } from './components/QuizResponsesModal';
 import { QuizResponseSubmitModal } from './components/QuizResponseSubmitModal';
 import { PrivacySettingsModal } from './components/PrivacySettingsModal';
+import { OpenAiConfigModal } from './components/OpenAiConfigModal';
 import { api } from './services/apiClient';
 import { User, Quiz, VoluntaryAnswer } from './types/backend';
 
@@ -38,8 +39,9 @@ export default function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [infoModalType, setInfoModalType] = useState<'privacy' | 'terms' | null>(null);
+  const [isOpenAiConfigOpen, setIsOpenAiConfigOpen] = useState(false);
 
-  // New Backend Interfaces
+  // Backend Interfaces
   const [isCreateQuizOpen, setIsCreateQuizOpen] = useState(false);
   const [isResponsesOpen, setIsResponsesOpen] = useState(false);
   const [isPrivacySettingsOpen, setIsPrivacySettingsOpen] = useState(false);
@@ -48,6 +50,7 @@ export default function App() {
   // AI Analysis Initial Data
   const [aiAnalysisFriendName, setAiAnalysisFriendName] = useState<string | undefined>(undefined);
   const [analysisInitialAnswers, setAnalysisInitialAnswers] = useState<VoluntaryAnswer[] | undefined>(undefined);
+  const [analysisVoluntaryNotes, setAnalysisVoluntaryNotes] = useState<string | undefined>(undefined);
 
   // Check URL hash for invitation tokens (e.g. #respond?token=wq_...)
   useEffect(() => {
@@ -69,13 +72,15 @@ export default function App() {
 
   const handleOpenAiWithAnswers = (answers: VoluntaryAnswer[], friendName?: string) => {
     setAnalysisInitialAnswers(answers);
-    setAiAnalysisFriendName(friendName || 'বন্ধু');
+    setAiAnalysisFriendName(friendName || 'আমার বন্ধু');
+    setAnalysisVoluntaryNotes(undefined);
     setIsAiAnalysisOpen(true);
   };
 
-  const handleOpenAiFromResponse = (friendName: string, answers: VoluntaryAnswer[]) => {
+  const handleOpenAiFromResponse = (friendName: string, answers: VoluntaryAnswer[], voluntaryNotes?: string) => {
     setAiAnalysisFriendName(friendName);
     setAnalysisInitialAnswers(answers);
+    setAnalysisVoluntaryNotes(voluntaryNotes);
     setIsAiAnalysisOpen(true);
   };
 
@@ -111,8 +116,11 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#080c1e] text-slate-100 flex flex-col font-bengali selection:bg-pink-500 selection:text-white relative">
       
-      {/* Top Backend Status & Transparency Banner */}
-      <BackendStatusBanner onOpenPrivacy={() => setIsPrivacySettingsOpen(true)} />
+      {/* Top Backend Status & OpenAI Banner */}
+      <BackendStatusBanner
+        onOpenPrivacy={() => setIsPrivacySettingsOpen(true)}
+        onOpenOpenAiConfig={() => setIsOpenAiConfigOpen(true)}
+      />
 
       {/* App Notification Banner */}
       {appNotification && (
@@ -142,57 +150,59 @@ export default function App() {
         </div>
       )}
 
-      {/* Navigation */}
+      {/* Navigation Bar */}
       <Navbar
-        currentUser={currentUser}
+        onStartQuiz={() => setIsQuizOpen(true)}
+        onOpenWishBox={() => setIsWishBoxOpen(true)}
+        onOpenAiAnalysis={() => {
+          setAiAnalysisFriendName(undefined);
+          setAnalysisInitialAnswers(undefined);
+          setAnalysisVoluntaryNotes(undefined);
+          setIsAiAnalysisOpen(true);
+        }}
         onOpenLogin={() => setIsLoginOpen(true)}
+        onOpenResponses={() => setIsResponsesOpen(true)}
+        onOpenOpenAiConfig={() => setIsOpenAiConfigOpen(true)}
+        currentUser={currentUser}
         onLogout={handleLogout}
-        onOpenQuiz={() => setIsQuizOpen(true)}
-        onOpenContact={() => setIsContactOpen(true)}
-        onOpenCreateQuiz={() => {
-          if (!currentUser) {
-            setIsLoginOpen(true);
-          } else {
-            setIsCreateQuizOpen(true);
-          }
-        }}
-        onOpenResponses={() => {
-          if (!currentUser) {
-            setIsLoginOpen(true);
-          } else {
-            setIsResponsesOpen(true);
-          }
-        }}
-        onOpenPrivacy={() => setIsPrivacySettingsOpen(true)}
       />
 
-      {/* Main Page Flow */}
+      {/* Main Page Sections */}
       <main className="flex-1">
-        {/* Hero Section */}
         <Hero
           onStartQuiz={() => setIsQuizOpen(true)}
           onOpenWishBox={() => setIsWishBoxOpen(true)}
-        />
-
-        {/* Features Section */}
-        <Features
-          onOpenQuiz={() => setIsQuizOpen(true)}
-          onOpenAiAnalysis={() => setIsAiAnalysisOpen(true)}
-          onOpenWishBox={() => setIsWishBoxOpen(true)}
-          onOpenFriendshipLink={() => {
-            setTargetLinkQuiz(null);
-            setIsLinkModalOpen(true);
+          onOpenAiAnalysis={() => {
+            setAiAnalysisFriendName(undefined);
+            setAnalysisInitialAnswers(undefined);
+            setAnalysisVoluntaryNotes(undefined);
+            setIsAiAnalysisOpen(true);
           }}
         />
 
-        {/* How It Works Section */}
-        <HowItWorks
+        <Features
           onStartQuiz={() => setIsQuizOpen(true)}
+          onOpenWishBox={() => setIsWishBoxOpen(true)}
+          onOpenAiAnalysis={() => {
+            setAiAnalysisFriendName(undefined);
+            setAnalysisInitialAnswers(undefined);
+            setAnalysisVoluntaryNotes(undefined);
+            setIsAiAnalysisOpen(true);
+          }}
+          onOpenFriendshipLink={() => {
+            if (currentUser) {
+              setIsResponsesOpen(true);
+            } else {
+              setIsCreateQuizOpen(true);
+            }
+          }}
         />
 
-        {/* Friendship Sunset CTA */}
+        <HowItWorks onStartQuiz={() => setIsQuizOpen(true)} />
+
         <FriendshipCTA
           onStartQuiz={() => setIsQuizOpen(true)}
+          onOpenWishBox={() => setIsWishBoxOpen(true)}
         />
       </main>
 
@@ -201,105 +211,119 @@ export default function App() {
         onOpenPrivacy={() => setInfoModalType('privacy')}
         onOpenTerms={() => setInfoModalType('terms')}
         onOpenContact={() => setIsContactOpen(true)}
-        onOpenQuiz={() => setIsQuizOpen(true)}
       />
 
-      {/* Floating Cat Helper Widget */}
+      {/* Floating Cat Widget */}
       <FloatingCatWidget
         onStartQuiz={() => setIsQuizOpen(true)}
         onOpenWishBox={() => setIsWishBoxOpen(true)}
       />
 
-      {/* Modals & Interfaces */}
-      
-      {/* 1. Registration & Login Modal */}
+      {/* --- Modals & Overlays --- */}
+
+      {/* 1. Standard Wish Quiz Modal */}
+      <QuizModal
+        isOpen={isQuizOpen}
+        onClose={() => setIsQuizOpen(false)}
+        onOpenFriendshipLink={() => {
+          setIsQuizOpen(false);
+          setIsLinkModalOpen(true);
+        }}
+        onOpenAiAnalysis={(answers) => {
+          setIsQuizOpen(false);
+          handleOpenAiWithAnswers(answers);
+        }}
+      />
+
+      {/* 2. OpenAI ChatGPT Analysis Modal */}
+      <AiAnalysisModal
+        isOpen={isAiAnalysisOpen}
+        onClose={() => setIsAiAnalysisOpen(false)}
+        onStartQuiz={() => {
+          setIsAiAnalysisOpen(false);
+          setIsQuizOpen(true);
+        }}
+        initialAnswers={analysisInitialAnswers}
+        initialFriendName={aiAnalysisFriendName}
+        initialVoluntaryNotes={analysisVoluntaryNotes}
+      />
+
+      {/* 3. OpenAI Configuration & Deployment Guide Modal */}
+      <OpenAiConfigModal
+        isOpen={isOpenAiConfigOpen}
+        onClose={() => setIsOpenAiConfigOpen(false)}
+      />
+
+      {/* 4. Secret Wish Box Modal */}
+      <WishBoxModal
+        isOpen={isWishBoxOpen}
+        onClose={() => setIsWishBoxOpen(false)}
+        currentUser={currentUser}
+        onOpenLogin={() => setIsLoginOpen(true)}
+      />
+
+      {/* 5. Custom Quiz Creation Modal */}
+      <CreateQuizModal
+        isOpen={isCreateQuizOpen}
+        onClose={() => setIsCreateQuizOpen(false)}
+        currentUser={currentUser}
+        onQuizCreated={handleQuizCreated}
+        onOpenLogin={() => setIsLoginOpen(true)}
+      />
+
+      {/* 6. Quiz Dashboard & Responses Modal */}
+      <QuizResponsesModal
+        isOpen={isResponsesOpen}
+        onClose={() => setIsResponsesOpen(false)}
+        onOpenCreateQuiz={() => setIsCreateQuizOpen(true)}
+        onOpenShareModal={handleOpenShareModal}
+        onOpenAiAnalysisWithData={handleOpenAiFromResponse}
+      />
+
+      {/* 7. Public Quiz Response Submission Modal (accessed via shared link) */}
+      <QuizResponseSubmitModal
+        shareToken={respondToken}
+        onClose={() => {
+          setRespondToken(null);
+          window.location.hash = '';
+        }}
+        onOpenMyQuiz={() => {
+          setRespondToken(null);
+          window.location.hash = '';
+          setIsQuizOpen(true);
+        }}
+      />
+
+      {/* 8. Shareable Friendship Link Modal */}
+      <FriendshipLinkModal
+        isOpen={isLinkModalOpen}
+        onClose={() => setIsLinkModalOpen(false)}
+        targetQuiz={targetLinkQuiz}
+      />
+
+      {/* 9. User Login & Registration Modal */}
       <LoginModal
         isOpen={isLoginOpen}
         onClose={() => setIsLoginOpen(false)}
         onSuccess={handleLoginSuccess}
       />
 
-      {/* 3. Quiz Creation Modal */}
-      <CreateQuizModal
-        isOpen={isCreateQuizOpen}
-        onClose={() => setIsCreateQuizOpen(false)}
-        onQuizCreated={handleQuizCreated}
-      />
-
-      {/* 4. Quiz Response Submission Modal (For friends with token) */}
-      <QuizResponseSubmitModal
-        isOpen={Boolean(respondToken)}
-        shareToken={respondToken || ''}
-        onClose={() => setRespondToken(null)}
-        onSuccess={() => {}}
-      />
-
-      {/* 5. Viewing Authorized Responses Dashboard Modal */}
-      <QuizResponsesModal
-        isOpen={isResponsesOpen}
-        onClose={() => setIsResponsesOpen(false)}
-        onOpenAiAnalysisWithData={handleOpenAiFromResponse}
-        onOpenShareModal={handleOpenShareModal}
-        onCreateNewQuiz={() => setIsCreateQuizOpen(true)}
-      />
-
-      {/* 6. Shareable Quiz Link Modal */}
-      <FriendshipLinkModal
-        isOpen={isLinkModalOpen}
-        onClose={() => {
-          setIsLinkModalOpen(false);
-          setTargetLinkQuiz(null);
-        }}
-        onOpenQuiz={() => setIsQuizOpen(true)}
-        targetQuiz={targetLinkQuiz}
-        onOpenRespondModal={(token) => setRespondToken(token)}
-      />
-
-      {/* 7. Saving and Deleting Wishes Modal */}
-      <WishBoxModal
-        isOpen={isWishBoxOpen}
-        onClose={() => setIsWishBoxOpen(false)}
-        onOpenLogin={() => setIsLoginOpen(true)}
-      />
-
-      {/* 8 & 9. Privacy Settings & Account Deletion Modal */}
+      {/* 10. Privacy & GDPR Settings Modal */}
       <PrivacySettingsModal
         isOpen={isPrivacySettingsOpen}
         onClose={() => setIsPrivacySettingsOpen(false)}
         currentUser={currentUser}
+        onOpenLogin={() => setIsLoginOpen(true)}
         onAccountDeleted={handleAccountDeleted}
       />
 
-      {/* General Secret Wish Quiz Modal */}
-      <QuizModal
-        isOpen={isQuizOpen}
-        onClose={() => setIsQuizOpen(false)}
-        onOpenFriendshipLink={() => {
-          setTargetLinkQuiz(null);
-          setIsLinkModalOpen(true);
-        }}
-        onOpenAiAnalysis={(answers) => handleOpenAiWithAnswers(answers, currentUser?.name || 'বন্ধু')}
-      />
-
-      {/* AI Analysis Modal */}
-      <AiAnalysisModal
-        isOpen={isAiAnalysisOpen}
-        onClose={() => {
-          setIsAiAnalysisOpen(false);
-          setAnalysisInitialAnswers(undefined);
-          setAiAnalysisFriendName(undefined);
-        }}
-        onStartQuiz={() => setIsQuizOpen(true)}
-        initialAnswers={analysisInitialAnswers}
-        initialFriendName={aiAnalysisFriendName}
-      />
-
-      {/* Contact & Info Modals */}
+      {/* 11. Contact & Feedback Modal */}
       <ContactModal
         isOpen={isContactOpen}
         onClose={() => setIsContactOpen(false)}
       />
 
+      {/* 12. Privacy Policy & Terms Modal */}
       <InfoModal
         type={infoModalType}
         onClose={() => setInfoModalType(null)}

@@ -1,86 +1,65 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useState, useEffect } from 'react';
-import {
-  X,
-  Heart,
-  Send,
-  CheckCircle2,
-  AlertCircle,
-  ShieldCheck,
-  Sparkles,
-  UserCheck,
-  Lock,
-} from 'lucide-react';
+import { X, Sparkles, Check, CheckCircle2, AlertCircle, Heart, Lock, ArrowRight } from 'lucide-react';
 import { api } from '../services/apiClient';
 import { Quiz } from '../types/backend';
 
 interface QuizResponseSubmitModalProps {
-  isOpen: boolean;
-  shareToken: string;
+  shareToken: string | null;
   onClose: () => void;
-  onSuccess?: () => void;
+  onOpenMyQuiz: () => void;
 }
 
 export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = ({
-  isOpen,
   shareToken,
   onClose,
-  onSuccess,
+  onOpenMyQuiz,
 }) => {
   const [quiz, setQuiz] = useState<Quiz | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Form states
   const [respondentName, setRespondentName] = useState('');
-  const [consentGiven, setConsentGiven] = useState(false);
+  const [consentGiven, setConsentGiven] = useState(true);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [voluntaryNote, setVoluntaryNote] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isOpen || !shareToken) return;
+    if (!shareToken) return;
 
-    setLoading(true);
-    setError(null);
-    setIsCompleted(false);
-
-    api.getQuizByShareToken(shareToken)
-      .then((data) => {
+    const loadQuiz = async () => {
+      setIsLoading(true);
+      setErrorMessage(null);
+      try {
+        const data = await api.getQuizByShareToken(shareToken);
         setQuiz(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : 'কুইজের তথ্য লোড করতে ব্যর্থ হয়েছে।');
-        setLoading(false);
-      });
-  }, [isOpen, shareToken]);
+      } catch (err: unknown) {
+        setErrorMessage(err instanceof Error ? err.message : 'কুইজ তথ্য লোড করা যায়নি।');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Lock body scroll and listen for Escape key
+    loadQuiz();
+  }, [shareToken]);
+
   useEffect(() => {
-    if (!isOpen) return;
+    if (!shareToken) return;
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+      if (e.key === 'Escape') onClose();
     };
-    window.addEventListener('keydown', handleKeyDown);
 
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
       document.body.style.overflow = originalOverflow;
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [shareToken, onClose]);
 
-  if (!isOpen) return null;
+  if (!shareToken) return null;
 
   const handleSelectOption = (questionId: string, optionText: string) => {
     setSelectedAnswers((prev) => ({
@@ -92,50 +71,46 @@ export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = (
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!quiz) return;
-    setError(null);
 
-    const trimmedName = respondentName.trim();
-    if (!trimmedName) {
-      setError('অনুগ্রহ করে আপনার নাম লিখুন।');
+    if (!respondentName.trim() || respondentName.trim().length < 2) {
+      setErrorMessage('অনুগ্রহ করে আপনার নাম লিখুন।');
       return;
     }
 
     if (!consentGiven) {
-      setError('উত্তরের গোপনীয়তা ও বন্ধুর সাথে শেয়ারের সম্মতি প্রদান আবশ্যক।');
+      setErrorMessage('বন্ধুর সাথে উত্তর শেয়ারের সম্মতি প্রদান আবশ্যক।');
       return;
     }
 
-    // Check if at least 1 answer is selected
-    const answerEntries = Object.entries(selectedAnswers);
-    if (answerEntries.length === 0) {
-      setError('কমপক্ষে একটি প্রশ্নের উত্তর নির্বাচন করুন।');
+    const answerKeys = Object.keys(selectedAnswers);
+    if (answerKeys.length === 0) {
+      setErrorMessage('কমপক্ষে ১টি প্রশ্নের উত্তর নির্বাচন করুন।');
       return;
     }
+
+    const formattedAnswers = quiz.questions
+      .filter((q) => selectedAnswers[q.id])
+      .map((q) => ({
+        questionId: q.id,
+        questionText: q.question,
+        category: q.category,
+        selectedOption: selectedAnswers[q.id],
+      }));
 
     setIsSubmitting(true);
+    setErrorMessage(null);
 
     try {
-      const answersPayload = quiz.questions
-        .filter((q) => selectedAnswers[q.id])
-        .map((q) => ({
-          questionId: q.id,
-          questionText: q.question,
-          category: q.category,
-          selectedOption: selectedAnswers[q.id],
-        }));
-
       await api.submitQuizResponse(shareToken, {
-        respondentName: trimmedName,
+        respondentName: respondentName.trim(),
         respondentConsentGiven: true,
-        answers: answersPayload,
+        answers: formattedAnswers,
         voluntaryNote: voluntaryNote.trim() || undefined,
       });
 
-      setIsCompleted(true);
-      if (onSuccess) onSuccess();
+      setIsSuccess(true);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'রেসপন্স পাঠাতে সমস্যা হয়েছে।';
-      setError(msg);
+      setErrorMessage(err instanceof Error ? err.message : 'উত্তর জমা দিতে সমস্যা হয়েছে।');
     } finally {
       setIsSubmitting(false);
     }
@@ -145,220 +120,188 @@ export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = (
     <div
       role="dialog"
       aria-modal="true"
-      aria-labelledby="respond-quiz-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200"
+      aria-labelledby="quiz-response-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 font-bengali"
     >
-      <div className="relative w-full max-w-xl rounded-2xl sm:rounded-3xl bg-[#0e1438] border border-pink-500/30 text-white shadow-2xl overflow-hidden max-h-[92dvh] flex flex-col">
+      <div className="relative w-full max-w-xl rounded-2xl sm:rounded-3xl bg-[#0c1233] border border-pink-500/30 text-white shadow-2xl overflow-hidden max-h-[92dvh] flex flex-col">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/10 bg-[#121945]/90 shrink-0">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white shadow-sm shrink-0">
-              <Heart className="w-4 h-4 fill-white" />
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-white/10 bg-[#10173e]/90 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-pink-500/20 border border-pink-500/30 flex items-center justify-center text-pink-400">
+              <Heart className="w-4 h-4" />
             </div>
-            <div className="min-w-0">
-              <h2 id="respond-quiz-title" className="font-bold text-sm sm:text-base font-bengali text-white truncate">
-                {quiz ? quiz.title : 'ফ্রেন্ডশিপ উইশ কুইজ'}
+            <div>
+              <h2 id="quiz-response-modal-title" className="font-bold text-sm sm:text-base text-white">
+                {quiz ? `${quiz.creatorName}-এর ফ্রেন্ডশিপ কুইজ` : 'ফ্রেন্ডশিপ কুইজ আমন্ত্রণ'}
               </h2>
-              <p className="text-[11px] text-pink-200/70 font-bengali truncate">
-                {quiz?.creatorName ? `${quiz.creatorName}-এর জন্য আপনার উত্তর` : 'বন্ধুর প্রশ্নের উত্তর দিন'}
+              <p className="text-[11px] text-pink-300/80">
+                স্বেচ্ছায় আপনার পছন্দের উত্তর জানিয়ে বন্ধুকে চমকে দিন
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             aria-label="বন্ধ করুন"
-            className="w-8 h-8 rounded-full text-slate-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors shrink-0 cursor-pointer focus-visible:ring-2 focus-visible:ring-pink-400"
+            className="w-8 h-8 rounded-full text-slate-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1 custom-scrollbar">
-
-          {loading ? (
-            <div className="py-12 text-center space-y-3 font-bengali">
-              <div className="w-10 h-10 border-2 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-xs text-slate-400">কুইজের তথ্য লোড হচ্ছে...</p>
+        {/* Modal Body */}
+        <div className="p-5 sm:p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
+          {isLoading ? (
+            <p className="text-xs text-slate-400 text-center py-8">কুইজ তথ্য লোড হচ্ছে...</p>
+          ) : errorMessage && !quiz ? (
+            <div className="p-4 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-200 text-xs text-center space-y-2">
+              <AlertCircle className="w-6 h-6 text-rose-400 mx-auto" />
+              <p>{errorMessage}</p>
             </div>
-          ) : error && !quiz ? (
-            <div className="py-8 text-center space-y-3 font-bengali">
-              <AlertCircle className="w-10 h-10 text-rose-400 mx-auto" />
-              <h3 className="font-bold text-sm text-white">কুইজটি খোলা সম্ভব হয়নি</h3>
-              <p className="text-xs text-slate-300 max-w-sm mx-auto">{error}</p>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs text-white font-semibold cursor-pointer"
-              >
-                ফিরে যান
-              </button>
-            </div>
-          ) : isCompleted ? (
+          ) : isSuccess ? (
             /* Success confirmation */
-            <div className="py-8 text-center space-y-4 font-bengali animate-in fade-in duration-200">
-              <div className="w-14 h-14 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 mx-auto shadow-lg shadow-emerald-500/20">
+            <div className="py-8 text-center space-y-4">
+              <div className="w-14 h-14 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
-              <div className="space-y-1">
-                <h3 className="text-lg font-bold text-white">উত্তর সফলভাবে জমা হয়েছে! 💖</h3>
-                <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
-                  ধন্যবাদ {respondentName}! আপনার পছন্দের উত্তরগুলো নিরাপদভাবে {quiz?.creatorName}-এর কাছে সংরক্ষিত হয়েছে।
+              <div className="space-y-1.5">
+                <h3 className="font-bold text-base text-white">ধন্যবাদ, {respondentName}!</h3>
+                <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+                  আপনার উত্তরটি সফলভাবে আপনার বন্ধু {quiz?.creatorName}-এর কাছে পৌঁছে দেওয়া হয়েছে!
                 </p>
               </div>
 
-              {/* Security confirmation notice */}
-              <div className="p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-[11px] text-indigo-200 max-w-md mx-auto text-left flex items-start gap-2">
-                <ShieldCheck className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-                <p>
-                  <strong>নিরাপত্তা প্রোটোকল:</strong> আপনার উত্তরটি শুধুমাত্র {quiz?.creatorName} লগইন করার পর দেখতে পারবেন। অন্য কোনো বহিরাগত ব্যক্তির এই তথ্যে প্রবেশাধিকার নেই।
-                </p>
-              </div>
-
-              <div className="pt-2">
+              <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold text-xs shadow-md cursor-pointer transition-all"
+                  className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-xs cursor-pointer transition-colors"
                 >
-                  সম্পন্ন করুন
+                  বন্ধ করুন
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenMyQuiz();
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold text-xs shadow-md cursor-pointer hover:brightness-110"
+                >
+                  নিজের জন্যও কুইজ তৈরি করুন
                 </button>
               </div>
             </div>
-          ) : (
-            /* Quiz Questions Form */
-            <form onSubmit={handleSubmit} className="space-y-4">
-
-              {error && (
-                <div
-                  role="alert"
-                  className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-200 text-xs font-bengali flex items-center gap-2"
-                >
-                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                  <span>{error}</span>
+          ) : quiz ? (
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {quiz.description && (
+                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 text-xs text-slate-300">
+                  <span className="font-bold text-pink-300 block mb-0.5">{quiz.creatorName}-এর বার্তা:</span>
+                  <p>{quiz.description}</p>
                 </div>
               )}
 
-              {/* Creator Intro */}
-              <div className="p-3 rounded-xl bg-pink-950/30 border border-pink-500/25 text-pink-200 text-xs font-bengali flex items-center gap-2.5">
-                <Sparkles className="w-4 h-4 text-pink-400 shrink-0" />
-                <span>
-                  <strong>{quiz?.creatorName}</strong> আপনাকে এই কুইজে আমন্ত্রণ জানিয়েছেন।
-                </span>
-              </div>
-
-              {/* Respondent Name */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1 font-bengali">
-                  আপনার নাম <span className="text-rose-400">*</span>
+              {/* Respondent Name Field */}
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-pink-300">
+                  আপনার নাম বা ডাকনাম <span className="text-rose-400">*</span>
                 </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    required
-                    placeholder="যেমন: সাদিয়া তাসনিম"
-                    value={respondentName}
-                    onChange={(e) => setRespondentName(e.target.value)}
-                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-[#090d26] border border-white/15 focus:border-pink-500 focus:outline-none text-xs sm:text-sm text-white placeholder-slate-500 font-bengali"
-                  />
-                  <UserCheck className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
-                </div>
+                <input
+                  type="text"
+                  required
+                  placeholder="যেমন: সাদিয়া, রাফসান..."
+                  value={respondentName}
+                  onChange={(e) => setRespondentName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#080d26] border border-white/15 focus:border-pink-400 focus:outline-none text-xs text-white"
+                />
               </div>
 
               {/* Questions */}
-              <div className="space-y-3.5 pt-1">
-                {quiz?.questions.map((q, idx) => {
-                  const selected = selectedAnswers[q.id];
-                  return (
-                    <div
-                      key={q.id || idx}
-                      className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 space-y-2.5 font-bengali"
-                    >
-                      <div className="flex items-center gap-2 text-xs font-bold text-sky-300">
+              <div className="space-y-4 pt-1">
+                <span className="text-xs font-bold text-slate-200 block">
+                  প্রশ্নগুলোর উত্তর নির্বাচন করুন:
+                </span>
+
+                <div className="space-y-3.5">
+                  {quiz.questions.map((q, idx) => (
+                    <div key={q.id} className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 space-y-2.5">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-sky-300">
                         <span>{q.categoryIcon || '✨'}</span>
-                        <span>প্রশ্ন {idx + 1}: {q.question}</span>
+                        <span>প্রশ্ন #{idx + 1}: {q.question}</span>
                       </div>
 
                       <div className="space-y-1.5">
                         {q.options.map((opt, optIdx) => {
-                          const isOptionSelected = selected === opt.text;
+                          const isSelected = selectedAnswers[q.id] === opt.text;
                           return (
                             <button
                               key={optIdx}
                               type="button"
                               onClick={() => handleSelectOption(q.id, opt.text)}
-                              className={`w-full text-left p-2.5 rounded-lg text-xs transition-all flex items-center gap-2.5 border cursor-pointer ${
-                                isOptionSelected
-                                  ? 'bg-pink-500/20 border-pink-400 text-white font-semibold'
-                                  : 'bg-black/20 border-white/5 text-slate-300 hover:bg-white/5'
+                              className={`w-full p-2.5 rounded-lg text-left text-xs transition-all cursor-pointer flex items-start gap-2 border ${
+                                isSelected
+                                  ? 'bg-pink-500/20 border-pink-400 text-white font-medium shadow-sm'
+                                  : 'bg-black/20 border-white/5 text-slate-300 hover:bg-white/5 hover:text-white'
                               }`}
                             >
-                              <span className={`w-3.5 h-3.5 rounded-full shrink-0 border flex items-center justify-center ${
-                                isOptionSelected ? 'border-pink-400 bg-pink-500 text-white' : 'border-slate-500'
+                              <span className={`w-4 h-4 rounded-full mt-0.5 shrink-0 flex items-center justify-center border text-[10px] ${
+                                isSelected ? 'border-pink-400 bg-pink-500 text-white' : 'border-slate-500'
                               }`}>
-                                {isOptionSelected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                               </span>
-                              <span className="leading-relaxed">{opt.text}</span>
+                              <span>{opt.text}</span>
                             </button>
                           );
                         })}
                       </div>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
 
               {/* Voluntary Note */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1 font-bengali">
-                  বন্ধুর জন্য কোনো অতিরিক্ত শুভেচ্ছা বার্তা বা মন্তব্য (ঐচ্ছিক):
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-slate-300">
+                  বন্ধুর উদ্দেশ্যে কোনো চিরকুট বা মনের কথা (ঐচ্ছিক):
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="যেমন: শুভ জন্মদিন বন্ধু! তোমার জন্য অনেক ভালোবাসা..."
+                  placeholder="যেমন: তোর জন্মদিনের সারপ্রাইজ উপহার কিন্তু সেরা হতে হবে..."
                   value={voluntaryNote}
                   onChange={(e) => setVoluntaryNote(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-[#090d26] border border-white/15 focus:border-pink-500 focus:outline-none text-xs text-white placeholder-slate-500 font-bengali resize-none"
+                  className="w-full px-3 py-2 rounded-xl bg-[#080d26] border border-white/15 focus:border-pink-400 focus:outline-none text-xs text-white placeholder-slate-500 resize-none"
                 />
               </div>
 
               {/* Consent Checkbox */}
-              <div className="p-3 rounded-xl bg-purple-950/40 border border-purple-500/30 text-xs font-bengali">
-                <label className="flex items-start gap-2.5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    required
-                    checked={consentGiven}
-                    onChange={(e) => setConsentGiven(e.target.checked)}
-                    className="mt-0.5 rounded border-white/20 bg-black/40 text-pink-500 focus:ring-0"
-                  />
-                  <div className="space-y-0.5">
-                    <span className="font-bold text-white block">
-                      স্বেচ্ছায় শেয়ার ও গোপনীয়তার সম্মতি <span className="text-rose-400">*</span>
-                    </span>
-                    <span className="text-[11px] text-slate-300 leading-relaxed block">
-                      আমি স্বেচ্ছায় এই উত্তরগুলো আমার বন্ধুর সাথে শেয়ার করছি এবং বুঝতে পারছি যে তিনি এই উত্তরগুলো তার ব্যক্তিগত ড্যাশবোর্ডে দেখতে পারবেন।
-                    </span>
-                  </div>
-                </label>
-              </div>
+              <label className="p-3 rounded-xl bg-purple-950/30 border border-purple-500/20 flex items-start gap-2 text-xs text-purple-200 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={consentGiven}
+                  onChange={(e) => setConsentGiven(e.target.checked)}
+                  className="mt-0.5 rounded text-pink-500 focus:ring-0"
+                />
+                <span className="leading-relaxed">
+                  আমি সচেতনভাবে ও স্বেচ্ছায় এই উত্তরগুলো আমার বন্ধু {quiz.creatorName}-এর সাথে শেয়ার করতে সম্মতি প্রদান করছি।
+                </span>
+              </label>
 
-              {/* Submit CTA */}
+              {errorMessage && (
+                <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-200 text-xs">
+                  {errorMessage}
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={isSubmitting || !consentGiven}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-500 disabled:opacity-50 active:scale-98 text-white font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all min-h-[44px] font-bengali focus-visible:ring-2 focus-visible:ring-pink-400"
+                disabled={isSubmitting}
+                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:brightness-110 active:scale-95 disabled:opacity-50 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Send className="w-4 h-4" />
-                <span>{isSubmitting ? 'পাঠানো হচ্ছে...' : 'উত্তর সাবমিট করুন'}</span>
+                <span>{isSubmitting ? 'জমা দেওয়া হচ্ছে...' : 'উত্তর সাবমিট করুন'}</span>
+                <ArrowRight className="w-4 h-4" />
               </button>
-
             </form>
-          )}
-
+          ) : null}
         </div>
-
       </div>
     </div>
   );

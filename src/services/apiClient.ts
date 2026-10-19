@@ -3,7 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { User, Quiz, QuizResponse, Wish, UserPrivacySettings, BackendStatus, OpenAiStatusResponse, OpenAiChatResponse } from '../types/backend';
+import {
+  User,
+  Quiz,
+  QuizResponse,
+  Wish,
+  UserPrivacySettings,
+  BackendStatus,
+  OpenAiStatusResponse,
+  OpenAiChatResponse,
+} from '../types/backend';
 
 const AUTH_TOKEN_KEY = 'wishreveal_auth_token';
 const AUTH_USER_KEY = 'wishreveal_auth_user';
@@ -91,6 +100,7 @@ class ApiClient {
         isConfigured: false,
         storageType: 'in_memory_development',
         message: 'ব্যাকএন্ড সার্ভারের সাথে সংযোগ পাওয়া যায়নি।',
+        hasOpenAiKey: false,
         hasGeminiKey: false,
         activeUsersCount: 0,
       };
@@ -167,7 +177,6 @@ class ApiClient {
   }
 
   public async getQuizByShareToken(shareToken: string): Promise<Quiz> {
-    // Public-facing quiz info without responses
     return await this.request<Quiz>(`/api/quizzes/public/${shareToken}`);
   }
 
@@ -240,4 +249,3 @@ class ApiClient {
 }
 
 export const api = new ApiClient();
-

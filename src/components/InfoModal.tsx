@@ -7,19 +7,16 @@ interface InfoModalProps {
 }
 
 export const InfoModal: React.FC<InfoModalProps> = ({ type, onClose }) => {
-  // Lock body scroll and listen for Escape key
   useEffect(() => {
     if (!type) return;
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+      if (e.key === 'Escape') onClose();
     };
-    window.addEventListener('keydown', handleKeyDown);
 
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
       document.body.style.overflow = originalOverflow;
       window.removeEventListener('keydown', handleKeyDown);
@@ -28,90 +25,80 @@ export const InfoModal: React.FC<InfoModalProps> = ({ type, onClose }) => {
 
   if (!type) return null;
 
-  const isPrivacy = type === 'privacy';
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg rounded-2xl sm:rounded-3xl bg-[#0e1438] border border-pink-500/30 text-white shadow-2xl overflow-hidden max-h-[92dvh] flex flex-col">
-        
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="info-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 font-bengali"
+    >
+      <div className="relative w-full max-w-2xl rounded-2xl sm:rounded-3xl bg-[#0c1233] border border-pink-500/30 text-white shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/10 bg-[#121945]/80 shrink-0">
-          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-pink-500/20 border border-pink-400/40 flex items-center justify-center text-pink-400 shrink-0">
-              {isPrivacy ? <Shield className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-white/10 bg-[#10173e]/90 shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-pink-500/20 border border-pink-500/30 flex items-center justify-center text-pink-400">
+              {type === 'privacy' ? <Shield className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
             </div>
-            <div className="min-w-0">
-              <h3 className="font-bold text-sm sm:text-base font-brand text-white truncate">
-                {isPrivacy ? 'প্রাইভেসি পলিসি' : 'শর্তাবলী ও নীতিমালা'}
-              </h3>
-              <p className="text-[11px] text-pink-200/70 font-bengali truncate">WishReveal Ai</p>
-            </div>
+            <h2 id="info-modal-title" className="font-bold text-sm sm:text-base text-white">
+              {type === 'privacy' ? 'গোপনীয়তা নীতি (Privacy Policy)' : 'ব্যবহারের শর্তাবলী (Terms of Service)'}
+            </h2>
           </div>
           <button
             onClick={onClose}
             aria-label="বন্ধ করুন"
-            className="w-8 h-8 rounded-full text-slate-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
+            className="w-8 h-8 rounded-full text-slate-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto space-y-3.5 text-xs sm:text-sm text-slate-300 font-bengali leading-relaxed flex-1">
-          {isPrivacy ? (
+        <div className="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1 custom-scrollbar text-xs leading-relaxed text-slate-300">
+          {type === 'privacy' ? (
             <>
-              <p className="font-semibold text-white">
-                ১. তথ্য সুরক্ষা ও গোপনীয়তা
-              </p>
               <p>
-                WishReveal Ai ব্যবহারকারীর ব্যক্তিগত তথ্য এবং ইচ্ছার সর্বোচ্চ গোপনীয়তা রক্ষা করতে প্রতিশ্রুতিবদ্ধ। আপনার অনুমতি ছাড়া কোনো তথ্য তৃতীয় পক্ষের সাথে শেয়ার করা হয় না।
+                WishReveal Ai-এ আমরা আপনার গোপনীয়তাকে সর্বোচ্চ অগ্রাধিকার প্রদান করি। এই প্ল্যাটফর্মটি বন্ধুদের মধ্যে ভালোবাসাপূর্ণ উপহার ও ইচ্ছার আদান-প্রদানকে সহজ ও আনন্দদায়ক করতে তৈরি করা হয়েছে।
               </p>
-              <p className="font-semibold text-white">
-                ২. কুইজের উত্তর সংগ্রহ
-              </p>
+              <h3 className="font-bold text-sm text-pink-300 pt-2">১. আমরা কী তথ্য সংগ্রহ করি?</h3>
               <p>
-                কুইজের উত্তরগুলো সম্পূর্ণ স্বেচ্ছায় প্রদত্ত। উত্তরগুলো শুধুমাত্র এআই বিশ্লেষণের মাধ্যমে বন্ধুদের মনের ইচ্ছা ও উপহারের পরামর্শ প্রস্তুত করার কাজে ব্যবহার করা হয়।
+                আমরা কেবল সেই তথ্য সংগ্রহ করি যা আপনি বা আপনার বন্ধু স্বেচ্ছায় কুইজ বা উইশ বক্সে ইনপুট দেন (যেমন: পছন্দের ভ্রমণ স্থান, শখ, উপহারের ধরন ইত্যাদি)।
               </p>
-              <p className="font-semibold text-white">
-                ৩. কুকিজ ও লোকাল স্টোরেজ
-              </p>
+              <h3 className="font-bold text-sm text-pink-300 pt-2">২. OpenAI ChatGPT ব্যবহারের স্বচ্ছতা</h3>
               <p>
-                আপনার সংরক্ষিত ইচ্ছা এবং পছন্দ ব্রাউজারে নিরাপদ রাখার সুবিধার্থে লোকাল ক্যাশিং ব্যবস্থা ব্যবহৃত হয়।
+                শেয়ার করা উত্তরের ভিত্তিতে উপহার আইডিয়া তৈরি করতে আমরা অফিসিয়াল OpenAI ChatGPT API ব্যবহার করি। আপনার কোনো ব্যক্তিগত সংবেদনশীল তথ্য বা পাসওয়ার্ড কোনো তৃতীয় পক্ষের সাথে ভাগ করা হয় না।
+              </p>
+              <h3 className="font-bold text-sm text-pink-300 pt-2">৩. পাসওয়ার্ড ও নিরাপত্তা</h3>
+              <p>
+                ব্যবহারকারীর পাসওয়ার্ডগুলি Node Scrypt ক্রিপ্টোগ্রাফিক অ্যালগরিদম ও ইউনিক সল্ট দিয়ে হ্যাশ করে সার্ভারে সংরক্ষিত থাকে।
               </p>
             </>
           ) : (
             <>
-              <p className="font-semibold text-white">
-                ১. বন্ধুত্বপূর্ণ ব্যবহারের নিয়মাবলী
-              </p>
               <p>
-                WishReveal Ai শুধুমাত্র বন্ধুত্ব, আন্তরিকতা ও ইতিবাচক আনন্দের জন্য তৈরি। কোনো প্রকার হয়রানি, অপব্যবহার বা আপত্তিজনক মন্তব্য সম্পূর্ণ নিষিদ্ধ।
+                WishReveal Ai প্ল্যাটফর্মটি ব্যবহারের মাধ্যমে আপনি নিচের শর্তাবলীতে সম্মত হচ্ছেন:
               </p>
-              <p className="font-semibold text-white">
-                ২. এআই বিশ্লেষণ সীমাবদ্ধতা
-              </p>
+              <h3 className="font-bold text-sm text-pink-300 pt-2">১. বন্ধুসুলভ বিনোদনমূলক ব্যবহার</h3>
               <p>
-                আমাদের এআই মডেল বন্ধুর পছন্দ ও সম্ভাব্য স্বপ্ন সংক্রান্ত ধারণা দেয়। এটি কোনো আইনি বা পেশাদার মনস্তাত্ত্বিক পরামর্শ নয়।
+                এই প্ল্যাটফর্মের সমস্ত কুইজ, ফলাফল ও AI বিশ্লেষণ শুধুমাত্র পারস্পরিক সৌহার্দ্য ও উপহারের ধারণার জন্য তৈরি। এটি কোনো অবচেতন বা মনস্তাত্ত্বিক দাবি নয়।
               </p>
-              <p className="font-semibold text-white">
-                ৩. বৌদ্ধিক সম্পত্তি
-              </p>
+              <h3 className="font-bold text-sm text-pink-300 pt-2">২. অপব্যবহার নিষিদ্ধ</h3>
               <p>
-                WishReveal Ai-এর সমস্ত লোগো, ডিজাইন ও অ্যালগরিদম স্বত্বাধিকার আইনের অধীনে সংরক্ষিত।
+                অন্য কারো নাম বা তথ্য বিকৃত করে অসৎ উদ্দেশ্যে কুইজ তৈরি বা অনুপযুক্ত তথ্য প্রেরণ কঠোরভাবে নিষিদ্ধ।
               </p>
             </>
           )}
-
-          <div className="pt-3 text-center">
-            <button
-              onClick={onClose}
-              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 active:scale-98 text-white font-medium text-xs transition-colors min-h-[44px] cursor-pointer"
-            >
-              বুঝেছি, বন্ধ করুন
-            </button>
-          </div>
         </div>
 
+        {/* Footer */}
+        <div className="px-5 sm:px-6 py-3 border-t border-white/10 bg-[#10173e]/80 flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-semibold cursor-pointer"
+          >
+            বন্ধ করুন
+          </button>
+        </div>
       </div>
     </div>
   );

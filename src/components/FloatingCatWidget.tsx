@@ -53,14 +53,14 @@ export const FloatingCatWidget: React.FC<FloatingCatWidgetProps> = ({
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               aria-label="পপআপ বন্ধ করুন"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="py-2.5 text-xs text-slate-200 space-y-1.5 leading-relaxed">
+          <div className="py-2.5 text-xs text-slate-200 space-y-1.5 leading-relaxed font-bengali">
             <p className="flex items-start gap-1.5">
               <Sparkles className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
               <span>
@@ -72,7 +72,7 @@ export const FloatingCatWidget: React.FC<FloatingCatWidgetProps> = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 pt-1">
+          <div className="grid grid-cols-2 gap-2 pt-1 font-bengali">
             <button
               onClick={() => {
                 setIsOpen(false);
@@ -103,7 +103,6 @@ export const FloatingCatWidget: React.FC<FloatingCatWidgetProps> = ({
           onClick={() => setIsOpen(!isOpen)}
           className="group relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-gradient-to-r from-[#17204d]/95 to-[#231b54]/95 hover:from-[#1e2a66] hover:to-[#2e236f] active:scale-95 border border-pink-400/40 shadow-xl shadow-black/50 hover:shadow-pink-500/30 transition-all duration-300 cursor-pointer max-w-[calc(100vw-64px)] min-h-[40px]"
         >
-          {/* Cute Cat Avatar with subtle movement */}
           <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-pink-300 via-white to-amber-100 flex items-center justify-center text-base sm:text-lg shadow-sm shrink-0 animate-cat-subtle">
             <span>🐱</span>
             <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-pink-500 rounded-full border border-white flex items-center justify-center animate-float-heart">
@@ -111,14 +110,12 @@ export const FloatingCatWidget: React.FC<FloatingCatWidgetProps> = ({
             </span>
           </div>
 
-          {/* Bengali Pill Text */}
           <span className="text-[11px] sm:text-xs md:text-sm font-semibold text-pink-200 tracking-wide font-bengali group-hover:text-white transition-colors truncate">
             তোমার বন্ধুর ইচ্ছা জানার অপেক্ষায়...
           </span>
           <span className="text-pink-400 shrink-0">💖</span>
         </button>
 
-        {/* Small dismiss button with accessible touch target */}
         <button
           onClick={() => setIsDismissed(true)}
           title="বন্ধ করুন"

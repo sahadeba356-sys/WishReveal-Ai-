@@ -1,8 +1,3 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useState, useEffect } from 'react';
 import {
   X,
@@ -14,19 +9,22 @@ import {
   Compass,
   AlertCircle,
   HelpCircle,
-  Cpu,
   UserCheck,
   RefreshCw,
   Copy,
   Check,
-  ArrowRight,
   ShieldAlert,
   Info,
   Send,
-  Sparkle,
   MessageCircle,
 } from 'lucide-react';
-import { analyzeFriendWishes, AnalysisResult, VoluntaryAnswer } from '../services/aiService';
+import {
+  analyzeFriendWishes,
+  askOpenAiFriendAdvisor,
+  generateDemoAnalysis,
+  AnalysisResult,
+  VoluntaryAnswer,
+} from '../services/aiService';
 
 interface AiAnalysisModalProps {
   isOpen: boolean;
@@ -34,9 +32,9 @@ interface AiAnalysisModalProps {
   onStartQuiz: () => void;
   initialAnswers?: VoluntaryAnswer[];
   initialFriendName?: string;
+  initialVoluntaryNotes?: string;
 }
 
-// 5 Standard Question Themes matching the Secret Wish Quiz
 const categoryQuestions = [
   {
     category: 'ভ্রমণ ও প্রকৃতি',
@@ -95,7 +93,6 @@ const categoryQuestions = [
   },
 ];
 
-// Presets for quick demonstration
 const presetScenarios = [
   {
     name: 'তানভীর (ভ্রমণ ও পাহাড়ি পরিবেশপ্রেমী)',
@@ -138,17 +135,32 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
   onStartQuiz,
   initialAnswers,
   initialFriendName,
+  initialVoluntaryNotes,
 }) => {
   const [friendName, setFriendName] = useState(initialFriendName || '');
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
-  const [voluntaryNotes, setVoluntaryNotes] = useState('');
+  const [voluntaryNotes, setVoluntaryNotes] = useState(initialVoluntaryNotes || '');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [hasCopied, setHasCopied] = useState(false);
 
-  // Sync initial answers if provided
+  // Stored payload for retry
+  const [lastSubmission, setLastSubmission] = useState<{
+    friendName: string;
+    answers: VoluntaryAnswer[];
+    voluntaryNotes: string;
+  } | null>(null);
+
+  // Interactive ChatGPT advisor state
+  const [chatQuestion, setChatQuestion] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatResponse, setChatResponse] = useState<string | null>(null);
+  const [chatError, setChatError] = useState<string | null>(null);
+  const [chatCopied, setChatCopied] = useState(false);
+
   useEffect(() => {
     if (initialAnswers && initialAnswers.length > 0) {
       const map: Record<string, string> = {};
@@ -160,9 +172,11 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
     if (initialFriendName) {
       setFriendName(initialFriendName);
     }
-  }, [initialAnswers, initialFriendName, isOpen]);
+    if (initialVoluntaryNotes) {
+      setVoluntaryNotes(initialVoluntaryNotes);
+    }
+  }, [initialAnswers, initialFriendName, initialVoluntaryNotes, isOpen]);
 
-  // Lock body scroll and listen for Escape key
   useEffect(() => {
     if (!isOpen) return;
     const originalOverflow = document.body.style.overflow;
@@ -173,8 +187,8 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
         onClose();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
 
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
       document.body.style.overflow = originalOverflow;
       window.removeEventListener('keydown', handleKeyDown);
@@ -184,7 +198,6 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
   if (!isOpen) return null;
 
   const handleSelectOption = (category: string, option: string) => {
-    setValidationError(null);
     setSelectedAnswers((prev) => {
       const updated = { ...prev };
       if (updated[category] === option) {
@@ -205,6 +218,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
     setSelectedAnswers(map);
     setVoluntaryNotes(preset.notes);
     setValidationError(null);
+    setApiError(null);
     setAnalysisResult(null);
   };
 
@@ -213,7 +227,52 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
     setSelectedAnswers({});
     setVoluntaryNotes('');
     setValidationError(null);
+    setApiError(null);
     setAnalysisResult(null);
+    setChatResponse(null);
+    setChatError(null);
+  };
+
+  const runAnalysis = async (
+    targetName: string,
+    targetAnswers: VoluntaryAnswer[],
+    targetNotes: string,
+    fallbackDemoOnly: boolean = false
+  ) => {
+    setIsLoading(true);
+    setApiError(null);
+    setLoadingStep(0);
+
+    const stepTimer1 = setTimeout(() => setLoadingStep(1), 700);
+    const stepTimer2 = setTimeout(() => setLoadingStep(2), 1400);
+
+    try {
+      if (fallbackDemoOnly) {
+        const demoRes = generateDemoAnalysis({
+          friendName: targetName,
+          answers: targetAnswers,
+          voluntaryNotes: targetNotes,
+        });
+        setAnalysisResult(demoRes);
+      } else {
+        const result = await analyzeFriendWishes(
+          {
+            friendName: targetName,
+            answers: targetAnswers,
+            voluntaryNotes: targetNotes,
+          },
+          { fallbackToDemoOnError: false }
+        );
+        setAnalysisResult(result);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'AI বিশ্লেষণে অপ্রত্যাশিত ত্রুটি দেখা দিয়েছে।';
+      setApiError(msg);
+    } finally {
+      clearTimeout(stepTimer1);
+      clearTimeout(stepTimer2);
+      setIsLoading(false);
+    }
   };
 
   const handleSubmitAnalysis = async (e: React.FormEvent) => {
@@ -225,7 +284,6 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
       answer,
     }));
 
-    // Validation
     if (!trimmedName) {
       setValidationError('অনুগ্রহ করে আপনার বন্ধুর নাম বা একটি ছদ্মনাম লিখুন।');
       return;
@@ -237,26 +295,51 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
     }
 
     setValidationError(null);
-    setIsLoading(true);
-    setLoadingStep(0);
+    setApiError(null);
 
-    // Friendly stepped loading animation
-    const stepTimer1 = setTimeout(() => setLoadingStep(1), 700);
-    const stepTimer2 = setTimeout(() => setLoadingStep(2), 1400);
+    const payload = {
+      friendName: trimmedName,
+      answers: answerEntries,
+      voluntaryNotes: voluntaryNotes.trim(),
+    };
+    setLastSubmission(payload);
+
+    await runAnalysis(payload.friendName, payload.answers, payload.voluntaryNotes);
+  };
+
+  const handleRetry = async () => {
+    if (!lastSubmission) return;
+    await runAnalysis(lastSubmission.friendName, lastSubmission.answers, lastSubmission.voluntaryNotes);
+  };
+
+  const handleUseDemo = () => {
+    if (!lastSubmission) return;
+    runAnalysis(lastSubmission.friendName, lastSubmission.answers, lastSubmission.voluntaryNotes, true);
+  };
+
+  const handleAskChatGpt = async (customPrompt?: string) => {
+    const question = (customPrompt || chatQuestion).trim();
+    if (!question) return;
+
+    setChatLoading(true);
+    setChatError(null);
+    setChatResponse(null);
 
     try {
-      const result = await analyzeFriendWishes({
-        friendName: trimmedName,
-        answers: answerEntries,
-        voluntaryNotes: voluntaryNotes.trim(),
-      });
-      setAnalysisResult(result);
-    } catch {
-      // Handled inside service
+      const contextSummary = analysisResult
+        ? `Friend: ${analysisResult.friendName}. Preferences: ${analysisResult.suggestions.map((s) => s.title).join(', ')}. Gifts: ${analysisResult.suggestedGifts.map((g) => g.name).join(', ')}`
+        : `Friend: ${friendName}`;
+
+      const res = await askOpenAiFriendAdvisor(question, analysisResult?.friendName || friendName, contextSummary);
+      setChatResponse(res.reply);
+      if (!customPrompt) {
+        setChatQuestion('');
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'ChatGPT থেকে পরামর্শ পেতে সাময়িক সমস্যা হয়েছে।';
+      setChatError(msg);
     } finally {
-      clearTimeout(stepTimer1);
-      clearTimeout(stepTimer2);
-      setIsLoading(false);
+      setChatLoading(false);
     }
   };
 
@@ -292,7 +375,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
             </div>
             <div className="min-w-0">
               <h2 id="ai-analysis-modal-title" className="font-bold text-sm sm:text-base text-white font-bengali truncate flex items-center gap-2">
-                <span>বন্ধুর পছন্দ বুঝুন AI-এর সাহায্যে</span>
+                <span>বন্ধুর পছন্দ বুঝুন OpenAI ChatGPT-এর সাহায্যে</span>
               </h2>
               <p className="text-[11px] text-sky-200/80 font-bengali truncate">
                 স্বেচ্ছায় শেয়ার করা উত্তরের প্যাটার্ন থেকে পছন্দের বিশ্লেষণ ও উপহারের আইডিয়া
@@ -311,18 +394,18 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
         {/* Modal Scrollable Body */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
 
-          {/* Ethical AI & Privacy Boundary Box (Critical Compliance) */}
+          {/* Ethical AI & Privacy Boundary Box */}
           <div className="p-3.5 rounded-xl bg-sky-950/40 border border-sky-500/30 text-sky-200 text-xs font-bengali space-y-1.5">
             <div className="flex items-center gap-2 font-bold text-sky-300">
               <ShieldAlert className="w-4 h-4 text-sky-400 shrink-0" />
               <span>নীতিমালা ও গোপনীয়তার প্রতিশ্রুতি (Ethical Guidelines)</span>
             </div>
             <p className="leading-relaxed text-slate-300 text-[11px] sm:text-xs">
-              • <strong>মন পড়ার ভান নয়:</strong> WishReveal Ai কোনো গোপন চিন্তা বা অবচেতন মনের ইচ্ছা পড়তে পারে না।
+              • <strong>মন পড়ার ভান নয়:</strong> WishReveal Ai কোনো গোপন চিন্তা পড়তে পারে না।
               <br />
               • <strong>স্বেচ্ছায় শেয়ারকৃত উত্তর:</strong> কেবল বন্ধু স্বেচ্ছায় যেসব উত্তর জানিয়েছেন, সেগুলোর শব্দার্থিক প্যাটার্ন মিলিয়ে সৃজনশীল আইডিয়া তৈরি হয়।
               <br />
-              • <strong>সংবেদনশীল তথ্য মুক্ত:</strong> ব্যক্তিগত, অর্থনৈতিক বা অতি-সংবেদনশীল কোনো অনুমানের স্থান নেই।
+              • <strong>সুরক্ষিত ব্যাকএন্ড:</strong> OpenAI API Key সম্পূর্ণ সার্ভার-সাইডে রক্ষিত থাকে এবং ব্রাউজারে কখনো দৃশ্যমান হয় না।
             </p>
           </div>
 
@@ -354,7 +437,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                       key={idx}
                       type="button"
                       onClick={() => handleApplyPreset(preset)}
-                      className="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-slate-200 hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
+                      className="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-slate-200 hover:text-white transition-all cursor-pointer flex items-center gap-1.5 font-bengali"
                     >
                       <span>✨ {preset.name}</span>
                     </button>
@@ -376,6 +459,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                   onChange={(e) => {
                     setFriendName(e.target.value);
                     if (validationError) setValidationError(null);
+                    if (apiError) setApiError(null);
                   }}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-[#080d26] border border-white/15 focus:border-sky-400 focus:ring-1 focus:ring-sky-400 focus:outline-none text-xs sm:text-sm text-white placeholder-slate-500 font-bengali"
                 />
@@ -469,6 +553,43 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                 </div>
               )}
 
+              {/* API error notice with Retry button */}
+              {apiError && (
+                <div
+                  role="alert"
+                  className="p-4 rounded-xl bg-rose-950/60 border border-rose-500/50 text-rose-200 text-xs font-bengali space-y-2.5 animate-in fade-in duration-150"
+                >
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="block text-rose-300">AI যোগাযোগে সমস্যা হয়েছে:</strong>
+                      <p className="text-[11px] text-rose-200/90 leading-relaxed">{apiError}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleRetry}
+                      disabled={isLoading}
+                      className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>পুনরায় চেষ্টা করুন (Retry)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleUseDemo}
+                      disabled={isLoading}
+                      className="px-3.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>ডেমো মোডে ফলাফল দেখুন</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Submit CTA */}
               <div className="pt-2">
                 <button
@@ -477,7 +598,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                   className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 active:scale-[0.99] text-white font-bold text-xs sm:text-sm shadow-lg shadow-sky-500/25 flex items-center justify-center gap-2 cursor-pointer transition-all min-h-[46px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 font-bengali"
                 >
                   <Bot className="w-4 h-4" />
-                  <span>AI বিশ্লেষণ শুরু করুন</span>
+                  <span>OpenAI ChatGPT দিয়ে বিশ্লেষণ শুরু করুন</span>
                 </button>
               </div>
 
@@ -486,8 +607,8 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
             /* Analysis Results Screen */
             <div className="space-y-5 animate-in fade-in duration-200">
               
-              {/* Header Status Bar (Mode indicator) */}
-              <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-white/5 border border-white/10">
+              {/* Header Status Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-white/5 border border-white/10 font-bengali">
                 <div className="flex items-center gap-2">
                   <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 border ${
                     analysisResult.mode === 'real_ai'
@@ -495,47 +616,47 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                       : 'bg-amber-500/20 text-amber-300 border-amber-400/30'
                   }`}>
                     <Sparkles className="w-3 h-3" />
-                    <span>{analysisResult.mode === 'real_ai' ? 'লাইভ AI মোড (Gemini 3.8 Flash)' : 'ডেমো মোড (নমুনা প্যাটার্ন)'}</span>
+                    <span>{analysisResult.mode === 'real_ai' ? 'লাইভ AI ইঞ্জিন সক্রিয়' : 'স্মার্ট ডেমো মোড'}</span>
                   </span>
-                  <span className="text-[11px] text-slate-400 font-bengali">
-                    বিশ্লেষণ ইঞ্জিন: {analysisResult.providerName}
+                  <span className="text-[11px] text-slate-300 font-medium">
+                    {analysisResult.providerName}
                   </span>
                 </div>
 
                 <button
                   onClick={handleClearForm}
-                  className="text-xs text-sky-400 hover:text-sky-300 hover:underline flex items-center gap-1 font-bengali cursor-pointer"
+                  className="text-xs text-sky-400 hover:text-sky-300 hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <RefreshCw className="w-3 h-3" />
                   <span>নতুন বিশ্লেষণ</span>
                 </button>
               </div>
 
-              {/* Demo Mode Notice Banner if in demo mode */}
+              {/* Demo Notice Banner */}
               {analysisResult.mode === 'demo_mode' && (
                 <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs font-bengali flex items-start gap-2">
                   <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                   <div className="space-y-0.5">
                     <span className="font-bold block text-amber-300">স্বচ্ছতা বিজ্ঞপ্তি: এটি একটি ডেমো মোড</span>
                     <p className="text-[11px] text-amber-100/90 leading-relaxed">
-                      {analysisResult.demoNotice || 'কোনো লাইভ এআই কী সংযুক্ত না থাকায় এটি পূর্বনির্ধারিত প্যাটার্ন ম্যাচিং অ্যালগরিদম ব্যবহার করছে। আমরা কোনো কৃত্রিমভাবে তৈরি ফলাফলকে বাস্তব এআই বলে দাবি করি না।'}
+                      {analysisResult.demoNotice || 'ব্যাকএন্ডে OPENAI_API_KEY কনফিগার করা না থাকায় এটি একটি ডেমো অ্যালগরিদম দিয়ে প্রস্তুত করা হয়েছে। লাইভ ChatGPT উত্তরের জন্য OPENAI_API_KEY সেট করুন।'}
                     </p>
                   </div>
                 </div>
               )}
 
               {/* Friend Overview Card */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-sky-950/40 via-indigo-950/30 to-purple-950/40 border border-sky-500/30 space-y-3">
-                <div className="flex items-center gap-2 text-sky-300 font-bold text-sm sm:text-base font-bengali">
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-sky-950/40 via-indigo-950/30 to-purple-950/40 border border-sky-500/30 space-y-3 font-bengali">
+                <div className="flex items-center gap-2 text-sky-300 font-bold text-sm sm:text-base">
                   <Heart className="w-4 h-4 text-pink-400 fill-pink-400 shrink-0" />
                   <span>{analysisResult.friendName}-এর শেয়ারকৃত উত্তরের বিশ্লেষণ সারসংক্ষেপ</span>
                 </div>
-                <p className="text-xs sm:text-sm text-slate-200 font-bengali leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
                   {analysisResult.summary}
                 </p>
               </div>
 
-              {/* Explicit Uncertainty Notice Banner */}
+              {/* Uncertainty Notice Banner */}
               <div className="p-3 rounded-xl bg-blue-950/40 border border-blue-500/30 text-blue-200 text-xs font-bengali flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
@@ -547,8 +668,8 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
               </div>
 
               {/* Suggested Preferences with Supporting Evidence */}
-              <div className="space-y-3">
-                <h3 className="text-xs sm:text-sm font-bold text-sky-300 font-bengali flex items-center gap-1.5">
+              <div className="space-y-3 font-bengali">
+                <h3 className="text-xs sm:text-sm font-bold text-sky-300 flex items-center gap-1.5">
                   <Compass className="w-4 h-4 text-sky-400" />
                   <span>সম্ভাব্য পছন্দ ও আগ্রহসমূহ (প্রমাণ ও যুক্তিসহ):</span>
                 </h3>
@@ -562,21 +683,20 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                       <div className="flex flex-wrap items-center justify-between gap-1.5">
                         <div className="flex items-center gap-2">
                           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                          <span className="font-bold text-xs sm:text-sm text-white font-bengali">
+                          <span className="font-bold text-xs sm:text-sm text-white">
                             {sug.title}
                           </span>
                         </div>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30 font-bengali">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30">
                           {sug.confidence}
                         </span>
                       </div>
 
-                      <p className="text-xs text-slate-300 font-bengali leading-relaxed pl-6">
+                      <p className="text-xs text-slate-300 leading-relaxed pl-6">
                         {sug.description}
                       </p>
 
-                      {/* Explicit evidence mapping box */}
-                      <div className="ml-6 p-2.5 rounded-lg bg-black/25 border border-white/5 space-y-1 text-[11px] font-bengali">
+                      <div className="ml-6 p-2.5 rounded-lg bg-black/25 border border-white/5 space-y-1 text-[11px]">
                         <div className="text-amber-300/90 font-medium flex items-center gap-1">
                           <span>📌 সমর্থনকারী উত্তর:</span>
                           <span className="text-white">"{sug.supportingAnswer}"</span>
@@ -593,8 +713,8 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
 
               {/* Suggested Surprise Gifts */}
               {analysisResult.suggestedGifts.length > 0 && (
-                <div className="space-y-3 pt-2">
-                  <h3 className="text-xs sm:text-sm font-bold text-pink-300 font-bengali flex items-center gap-1.5">
+                <div className="space-y-3 pt-2 font-bengali">
+                  <h3 className="text-xs sm:text-sm font-bold text-pink-300 flex items-center gap-1.5">
                     <Gift className="w-4 h-4 text-pink-400" />
                     <span>সম্ভাব্য সারপ্রাইজ উপহার আইডিয়াসমূহ (পরামর্শ মাত্র):</span>
                   </h3>
@@ -605,14 +725,14 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                         key={idx}
                         className="p-3 rounded-xl bg-gradient-to-br from-pink-950/20 to-purple-950/20 border border-pink-500/20 space-y-1.5"
                       >
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-pink-200 font-bengali">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-pink-200">
                           <Heart className="w-3.5 h-3.5 text-pink-400 fill-pink-400 shrink-0" />
                           <span className="truncate">{gift.name}</span>
                         </div>
-                        <p className="text-[11px] text-slate-300 font-bengali leading-relaxed">
+                        <p className="text-[11px] text-slate-300 leading-relaxed">
                           {gift.reason}
                         </p>
-                        <span className="block text-[10px] text-pink-300/70 font-bengali pt-0.5">
+                        <span className="block text-[10px] text-pink-300/70 pt-0.5">
                           ভিত্তিক: "{gift.supportingAnswer}"
                         </span>
                       </div>
@@ -623,7 +743,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
 
               {/* Friendship Tip */}
               <div className="p-3.5 rounded-xl bg-purple-950/30 border border-purple-500/30 text-purple-200 text-xs font-bengali flex items-start gap-2">
-                <Sparkle className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
+                <Sparkles className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <span className="font-bold text-purple-300 block">বন্ধুত্বের আন্তরিক পরামর্শ:</span>
                   <p className="text-[11px] text-purple-100/90 leading-relaxed">
@@ -632,12 +752,111 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                 </div>
               </div>
 
+              {/* Interactive ChatGPT Friendship Advisor Drawer */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-[#0c1638] to-[#121136] border border-sky-500/30 space-y-3 font-bengali">
+                <div className="flex items-center gap-2 text-sky-300 font-bold text-xs sm:text-sm">
+                  <Bot className="w-4 h-4 text-sky-400" />
+                  <span>ChatGPT-এর কাছে সরাসরি আরও পরামর্শ চান:</span>
+                </div>
+
+                {/* Quick Chips */}
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleAskChatGpt(`${analysisResult.friendName}-এর জন্য ৫০০-১০০০ টাকার মধ্যে একটি সারপ্রাইজ উপহার আইডিয়া দিন`)}
+                    className="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-slate-300 hover:text-white transition-colors cursor-pointer"
+                  >
+                    🎁 বাজেট উপহার আইডিয়া
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAskChatGpt(`${analysisResult.friendName}-এর জন্য একটি মন ছুঁয়ে যাওয়া জন্মদিনের শুভেচ্ছা বার্তা লিখে দিন`)}
+                    className="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-slate-300 hover:text-white transition-colors cursor-pointer"
+                  >
+                    💌 জন্মদিনের শুভেচ্ছা বার্তা
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAskChatGpt(`${analysisResult.friendName}-এর সাথে আড্ডা আরও জমজমাট করতে চমৎকার কোনো প্ল্যানিং টিপস দিন`)}
+                    className="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-slate-300 hover:text-white transition-colors cursor-pointer"
+                  >
+                    ☕ আড্ডার চমৎকার প্ল্যান
+                  </button>
+                </div>
+
+                {/* Custom Question Input */}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder={`যেমন: ${analysisResult.friendName}-এর সাথে সারপ্রাইজ পার্টির আইডিয়া...`}
+                    value={chatQuestion}
+                    onChange={(e) => setChatQuestion(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAskChatGpt();
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 rounded-xl bg-black/30 border border-white/15 focus:border-sky-400 focus:outline-none text-xs text-white placeholder-slate-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleAskChatGpt()}
+                    disabled={chatLoading || !chatQuestion.trim()}
+                    className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 active:scale-95 disabled:bg-white/10 disabled:text-slate-500 text-white font-semibold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    {chatLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    <span>জানুন</span>
+                  </button>
+                </div>
+
+                {/* ChatGPT Response Area */}
+                {chatResponse && (
+                  <div className="p-3.5 rounded-xl bg-black/40 border border-sky-400/30 text-xs text-slate-200 space-y-2 animate-in fade-in duration-150">
+                    <div className="flex items-center justify-between text-[11px] text-sky-300 font-semibold border-b border-white/10 pb-1.5">
+                      <span className="flex items-center gap-1.5">
+                        <Bot className="w-3.5 h-3.5 text-sky-400" />
+                        <span>ChatGPT-এর পরামর্শ:</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(chatResponse);
+                          setChatCopied(true);
+                          setTimeout(() => setChatCopied(false), 2000);
+                        }}
+                        className="text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer"
+                      >
+                        {chatCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                        <span>{chatCopied ? 'কপি হয়েছে' : 'কপি'}</span>
+                      </button>
+                    </div>
+                    <div className="leading-relaxed whitespace-pre-wrap text-slate-300 text-[11px] sm:text-xs">
+                      {chatResponse}
+                    </div>
+                  </div>
+                )}
+
+                {chatError && (
+                  <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-200 text-xs flex items-center justify-between gap-2">
+                    <span>{chatError}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleAskChatGpt()}
+                      className="px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-semibold cursor-pointer shrink-0"
+                    >
+                      আবার চেষ্টা করুন
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-center gap-2 pt-2">
+              <div className="flex flex-col sm:flex-row items-center gap-2 pt-2 font-bengali">
                 <button
                   type="button"
                   onClick={handleCopySummary}
-                  className="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/15 active:scale-98 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer min-h-[42px] border border-white/10 font-bengali"
+                  className="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/15 active:scale-98 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer min-h-[42px] border border-white/10"
                 >
                   {hasCopied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                   <span>{hasCopied ? 'কপি সম্পন্ন হয়েছে!' : 'ফলাফল কপি করুন'}</span>
@@ -649,7 +868,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                     onClose();
                     onStartQuiz();
                   }}
-                  className="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 active:scale-98 text-white font-semibold text-xs shadow-md shadow-pink-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer min-h-[42px] font-bengali"
+                  className="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 active:scale-98 text-white font-semibold text-xs shadow-md shadow-pink-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer min-h-[42px]"
                 >
                   <Gift className="w-4 h-4" />
                   <span>নিজের কুইজ খেলে দেখুন</span>
@@ -661,9 +880,9 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
 
         </div>
 
-        {/* Loading Overlay */}
+        {/* Loading Overlay with stepped progression */}
         {isLoading && (
-          <div className="absolute inset-0 bg-[#0c1233]/90 backdrop-blur-sm z-30 flex flex-col items-center justify-center p-6 text-center space-y-4 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-[#0c1233]/92 backdrop-blur-sm z-30 flex flex-col items-center justify-center p-6 text-center space-y-4 animate-in fade-in duration-200 font-bengali">
             <div className="relative">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-500 via-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-xl shadow-sky-500/30 animate-pulse">
                 <Bot className="w-8 h-8" />
@@ -674,21 +893,20 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
             </div>
 
             <div className="space-y-1.5 max-w-sm">
-              <h4 className="text-base font-bold text-white font-bengali">
+              <h4 className="text-base font-bold text-white">
                 {loadingStep === 0 && '🔍 স্বেচ্ছায় প্রদত্ত উত্তরগুলো যাচাই করা হচ্ছে...'}
-                {loadingStep === 1 && '💡 শব্দার্থ ও পছন্দের প্যাটার্ন অনুসন্ধান করা হচ্ছে...'}
-                {loadingStep === 2 && '✨ নিরাপদ ও গঠনমূলক উপহার আইডিয়া প্রস্তুত হচ্ছে...'}
+                {loadingStep === 1 && '💡 OpenAI ChatGPT-এর সাথে যোগাযোগ হচ্ছে...'}
+                {loadingStep === 2 && '✨ নিরাপদ ও অর্থবহ উপহার আইডিয়া প্রস্তুত হচ্ছে...'}
               </h4>
-              <p className="text-xs text-sky-200/80 font-bengali">
-                {friendName}-এর উত্তর থেকে সম্ভাব্য পছন্দের আইডিয়া প্রস্তুত হচ্ছে
+              <p className="text-xs text-sky-200/80">
+                {friendName}-এর উত্তর থেকে পছন্দের নিখুঁত বিশ্লেষণ প্রস্তুত হচ্ছে
               </p>
             </div>
 
-            {/* Pulsing indicator dots */}
             <div className="flex items-center gap-1.5 pt-1">
-              <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping" />
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping delay-150" />
-              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping delay-300" />
+              <span className="w-2.5 h-2.5 rounded-full bg-sky-400 animate-ping" />
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-ping delay-150" />
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-ping delay-300" />
             </div>
           </div>
         )}

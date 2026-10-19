@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 interface RevealOnScrollProps {
   children: React.ReactNode;
   className?: string;
-  delay?: number; // optional delay in ms
+  delay?: number;
 }
 
 export const RevealOnScroll: React.FC<RevealOnScrollProps> = ({
@@ -15,41 +15,40 @@ export const RevealOnScroll: React.FC<RevealOnScrollProps> = ({
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // If reduced motion is requested, immediately show
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) {
-      setIsVisible(true);
-      return;
-    }
-
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          if (delay > 0) {
-            setTimeout(() => setIsVisible(true), delay);
-          } else {
-            setIsVisible(true);
-          }
-          observer.disconnect();
+          setIsVisible(true);
+          observer.unobserve(entry.target);
         }
       },
       {
-        threshold: 0.12,
-        rootMargin: '0px 0px -40px 0px',
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px',
       }
     );
 
-    if (ref.current) {
-      observer.observe(ref.current);
+    const currentRef = ref.current;
+    if (currentRef) {
+      observer.observe(currentRef);
     }
 
-    return () => observer.disconnect();
-  }, [delay]);
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, []);
 
   return (
     <div
       ref={ref}
-      className={`reveal-on-scroll ${isVisible ? 'is-revealed' : ''} ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+      className={`transition-all duration-700 ease-out ${
+        isVisible
+          ? 'opacity-100 translate-y-0'
+          : 'opacity-0 translate-y-8 pointer-events-none'
+      } ${className}`}
     >
       {children}
     </div>

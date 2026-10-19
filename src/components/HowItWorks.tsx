@@ -1,5 +1,5 @@
 import React from 'react';
-import { Smartphone, MessageSquareText, BrainCircuit, Smile, ArrowRight, Sparkles } from 'lucide-react';
+import { Sparkles, HelpCircle, UserCheck, Bot, Gift, ArrowRight } from 'lucide-react';
 import { RevealOnScroll } from './RevealOnScroll';
 
 interface HowItWorksProps {
@@ -9,145 +9,93 @@ interface HowItWorksProps {
 export const HowItWorks: React.FC<HowItWorksProps> = ({ onStartQuiz }) => {
   const steps = [
     {
-      num: '1',
-      badgeColor: 'bg-indigo-600 text-white shadow-indigo-500/40',
-      iconBoxBg: 'bg-gradient-to-tr from-indigo-900/60 to-purple-900/40 border-indigo-500/30 text-indigo-300',
-      title: 'লিংক শেয়ার করুন',
-      desc: 'আপনার বন্ধুকে লিংক পাঠান (অথবা সে নিজে আসুক)!',
-      icon: (
-        <div className="relative">
-          <Smartphone className="w-8 h-8 sm:w-10 sm:h-10 text-indigo-300" />
-          <span className="absolute top-1.5 left-2.5 w-3.5 h-3.5 bg-pink-500 rounded-xs flex items-center justify-center text-[7px] text-white font-bold">
-            ?
-          </span>
-        </div>
-      ),
+      num: '০১',
+      title: 'কুইজ খেলুন বা তৈরি করুন',
+      desc: 'ভ্রমণ, পছন্দের উপহার, শখ ও স্বপ্নের ওপর ভিত্তি করে সহজ ও অর্থপূর্ণ প্রশ্নগুলোর উত্তর নির্বাচন করুন।',
+      icon: UserCheck,
+      color: 'from-pink-500 to-rose-500',
     },
     {
-      num: '2',
-      badgeColor: 'bg-sky-500 text-white shadow-sky-500/40',
-      iconBoxBg: 'bg-gradient-to-tr from-sky-900/60 to-cyan-900/40 border-sky-500/30 text-sky-300',
-      title: 'প্রশ্নের উত্তর দিন',
-      desc: 'কয়েকটি সহজ ও মজার প্রশ্নের উত্তর দিতে হবে।',
-      icon: (
-        <div className="relative">
-          <MessageSquareText className="w-8 h-8 sm:w-10 sm:h-10 text-sky-300" />
-          <span className="absolute -top-1 -right-1 text-pink-400 animate-twinkle">
-            <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-pink-400" />
-          </span>
-        </div>
-      ),
+      num: '০২',
+      title: 'বন্ধুর সাথে শেয়ার করুন',
+      desc: 'কুইজ শেষের ইউনিক লিংকটি বন্ধুর সাথে শেয়ার করুন। বন্ধু তার নিজের পছন্দ স্বেচ্ছায় জানিয়ে উত্তর সাবমিট করবে।',
+      icon: HelpCircle,
+      color: 'from-purple-500 to-indigo-500',
     },
     {
-      num: '3',
-      badgeColor: 'bg-fuchsia-600 text-white shadow-fuchsia-500/40',
-      iconBoxBg: 'bg-gradient-to-tr from-purple-900/60 to-pink-900/40 border-pink-500/30 text-pink-300',
-      title: 'AI বিশ্লেষণ করবে',
-      desc: 'আপনার বন্ধুর উত্তর বিশ্লেষণ করে AI জানাবে তার মনের ইচ্ছা।',
-      icon: (
-        <div className="relative">
-          <BrainCircuit className="w-8 h-8 sm:w-10 sm:h-10 text-pink-300" />
-          <span className="absolute -bottom-1 -right-1 px-1 py-0.2 bg-purple-600 rounded text-[8px] text-white font-bold">
-            AI
-          </span>
-        </div>
-      ),
+      num: '০৩',
+      title: 'AI দিয়ে সঠিক উপহার বুঝুন',
+      desc: 'OpenAI ChatGPT উত্তরের প্যাটার্ন পর্যালোচনা করে জানাবে কোন উপহারটি সবচেয়ে নিখুঁত ও স্মৃতিময় হবে।',
+      icon: Bot,
+      color: 'from-sky-500 to-blue-500',
     },
     {
-      num: '4',
-      badgeColor: 'bg-emerald-500 text-white shadow-emerald-500/40',
-      iconBoxBg: 'bg-gradient-to-tr from-amber-900/50 to-emerald-900/40 border-emerald-500/30 text-amber-300',
-      title: 'ফলাফল দেখুন',
-      desc: 'জানুন তার স্বপ্ন, পছন্দ, ব্যক্তিত্ব এবং আরও অনেক কিছু!',
-      icon: (
-        <div className="relative">
-          <Smile className="w-8 h-8 sm:w-10 sm:h-10 text-amber-300 animate-cat-subtle" />
-          <span className="absolute -top-1 -right-1 text-amber-400 animate-twinkle delay-500">
-            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-amber-400" />
-          </span>
-        </div>
-      ),
+      num: '০৪',
+      title: 'পারফেক্ট সারপ্রাইজ দিন',
+      desc: 'কোনো দ্বিধা বা অপ্রাসঙ্গিক উপহার নয়—বন্ধুকে চমকে দিন এমন কিছু দিয়ে যা সে আসলেই মনে প্রাণে চেয়েছিল!',
+      icon: Gift,
+      color: 'from-emerald-500 to-teal-500',
     },
   ];
 
   return (
-    <section id="how-it-works" className="py-14 sm:py-20 md:py-24 bg-[#090e24] text-white relative overflow-hidden w-full max-w-full">
-      {/* Background soft glow circles with gentle ambient pulse */}
-      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-64 sm:w-96 h-64 sm:h-96 bg-purple-600/10 rounded-full blur-[80px] sm:blur-[100px] pointer-events-none animate-ambient-glow" />
-      <div className="absolute bottom-10 right-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-pink-600/10 rounded-full blur-[80px] sm:blur-[100px] pointer-events-none animate-ambient-glow delay-700" />
-
-      <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 relative z-10">
-        
-        {/* Section Heading with Reveal on Scroll */}
-        <RevealOnScroll className="text-center max-w-2xl mx-auto mb-10 sm:mb-16 space-y-2 sm:space-y-3">
-          <div className="inline-flex items-center gap-1.5 sm:gap-2 text-amber-400 font-bold text-lg sm:text-2xl">
-            <span className="animate-twinkle">⚡</span>
-            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight">
-              কিভাবে কাজ করে?
+    <section id="how" className="py-16 sm:py-24 relative overflow-hidden bg-[#080c1e]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <RevealOnScroll>
+          <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs font-semibold mb-3">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>সহজ ৪ ধাপ</span>
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight font-bengali">
+              কিভাবে কাজ করে WishReveal Ai?
             </h2>
-            <span className="animate-twinkle delay-300">⚡</span>
+            <p className="mt-3.5 text-xs sm:text-base text-slate-300 font-bengali leading-relaxed">
+              স্বচ্ছতা ও সম্মতির ভিত্তিতে তৈরি একটি সহজ ও মজাদার উপহার প্ল্যানিং জার্নি।
+            </p>
           </div>
-          <p className="text-pink-200/80 text-xs sm:text-base font-medium px-2">
-            মাত্র ৪টি সহজ ধাপে জানুন আপনার বন্ধুর মনের কথা
-          </p>
         </RevealOnScroll>
 
-        {/* Steps Flow Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 relative">
-          {steps.map((step, idx) => (
-            <RevealOnScroll key={step.num} delay={idx * 100}>
-              <div className="relative flex flex-col items-center text-center group p-4 sm:p-5 rounded-2xl bg-white/[0.02] sm:bg-transparent border border-white/5 sm:border-none hover:bg-white/[0.04] transition-all duration-300">
-                
-                {/* Connector Arrow (desktop only) */}
-                {idx < steps.length - 1 && (
-                  <div className="hidden lg:flex absolute top-10 -right-4 translate-x-1/2 z-20 text-indigo-400/50 group-hover:text-pink-400 transition-colors">
-                    <ArrowRight className="w-5 h-5 stroke-[2.5]" />
-                  </div>
-                )}
-
-                {/* Number Badge & Main Icon Container */}
-                <div className="relative mb-4 sm:mb-6">
-                  {/* Floating Number Circle Badge */}
-                  <div
-                    className={`absolute -top-2.5 -left-2.5 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full ${step.badgeColor} flex items-center justify-center font-bold text-xs sm:text-sm shadow-lg transform group-hover:scale-110 transition-transform duration-200`}
-                  >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {steps.map((step, idx) => {
+            const Icon = step.icon;
+            return (
+              <RevealOnScroll key={idx} delay={idx * 120}>
+                <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-purple-500/30 transition-all duration-300 flex flex-col justify-between h-full relative group">
+                  <span className="text-3xl font-black text-white/10 group-hover:text-pink-500/20 transition-colors font-brand absolute top-4 right-4">
                     {step.num}
-                  </div>
+                  </span>
 
-                  {/* Outer Glassmorphic Icon Box */}
-                  <div
-                    className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl ${step.iconBoxBg} border backdrop-blur-md flex items-center justify-center shadow-lg sm:shadow-xl group-hover:scale-105 group-hover:border-pink-500/50 transition-all duration-300`}
-                  >
-                    {step.icon}
+                  <div className="space-y-4">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-tr ${step.color} flex items-center justify-center text-white shadow-lg`}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+
+                    <h3 className="text-base sm:text-lg font-bold text-white font-bengali">
+                      {step.title}
+                    </h3>
+
+                    <p className="text-xs sm:text-sm text-slate-300 font-bengali leading-relaxed">
+                      {step.desc}
+                    </p>
                   </div>
                 </div>
-
-                {/* Step Title */}
-                <h3 className="text-lg sm:text-xl font-bold text-white mb-1.5 sm:mb-2 font-brand group-hover:text-pink-300 transition-colors">
-                  {step.title}
-                </h3>
-
-                {/* Step Description */}
-                <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-xs font-normal">
-                  {step.desc}
-                </p>
-              </div>
-            </RevealOnScroll>
-          ))}
+              </RevealOnScroll>
+            );
+          })}
         </div>
 
-        {/* Quick Action below steps with Animated Gradient */}
-        <RevealOnScroll delay={200} className="mt-10 sm:mt-14 text-center">
-          <button
-            onClick={onStartQuiz}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 rounded-full bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 animate-gradient-flow hover:scale-105 active:scale-98 text-white font-semibold text-sm sm:text-base shadow-lg shadow-pink-600/30 transition-transform duration-200 cursor-pointer min-h-[48px]"
-          >
-            <Sparkles className="w-4 h-4 text-amber-300 animate-twinkle" />
-            <span>এখনই প্রথম ধাপ শুরু করুন</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
+        <RevealOnScroll delay={500}>
+          <div className="mt-12 text-center">
+            <button
+              onClick={onStartQuiz}
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold text-xs sm:text-sm shadow-lg shadow-pink-500/20 active:scale-95 transition-all cursor-pointer font-bengali"
+            >
+              <span>এখনই একটি কুইজ শুরু করুন</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
         </RevealOnScroll>
-
       </div>
     </section>
   );
