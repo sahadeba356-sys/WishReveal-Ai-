@@ -26,8 +26,10 @@ import { PrivacySettingsModal } from './components/PrivacySettingsModal';
 import { OpenAiConfigModal } from './components/OpenAiConfigModal';
 import { api } from './services/apiClient';
 import { User, Quiz, VoluntaryAnswer } from './types/backend';
+import { LanguageProvider, useLanguage } from './i18n/LanguageContext';
 
-export default function App() {
+function MainApp() {
+  const { language, t } = useLanguage();
   const [currentUser, setCurrentUser] = useState<User | null>(api.getCurrentUser());
 
   // Modal Open States
@@ -93,13 +95,17 @@ export default function App() {
   const handleLogout = async () => {
     await api.logout();
     setCurrentUser(null);
-    setAppNotification('সফলভাবে লগআউট করা হয়েছে।');
+    setAppNotification(language === 'bn' ? 'সফলভাবে লগআউট করা হয়েছে।' : 'Successfully logged out.');
     setTimeout(() => setAppNotification(null), 4000);
   };
 
   const handleAccountDeleted = () => {
     setCurrentUser(null);
-    setAppNotification('আপনার অ্যাকাউন্ট এবং সমস্ত ডেটা সফলভাবে মুছে ফেলা হয়েছে।');
+    setAppNotification(
+      language === 'bn'
+        ? 'আপনার অ্যাকাউন্ট এবং সমস্ত ডেটা সফলভাবে মুছে ফেলা হয়েছে।'
+        : 'Your account and all data have been permanently deleted.'
+    );
     setTimeout(() => setAppNotification(null), 6000);
   };
 
@@ -130,7 +136,7 @@ export default function App() {
             type="button"
             onClick={() => setAppNotification(null)}
             className="text-emerald-400 hover:text-white p-0.5 cursor-pointer ml-1 text-sm font-bold leading-none"
-            aria-label="বার্তা বন্ধ করুন"
+            aria-label={t.close}
           >
             ✕
           </button>
@@ -140,12 +146,14 @@ export default function App() {
       {/* Logged in notification banner */}
       {currentUser && (
         <div className="bg-gradient-to-r from-purple-900/90 via-pink-900/90 to-indigo-900/90 border-b border-pink-500/30 py-1 px-3 text-center text-[11px] sm:text-xs text-pink-200 z-30 flex items-center justify-center gap-2">
-          <span className="truncate">স্বাগতম, {currentUser.name}! নিরাপদ অ্যাকাউন্টে যুক্ত আছেন 💖</span>
+          <span className="truncate">
+            {t.backendLoggedInWelcome}, {currentUser.name}! {t.backendLoggedInSuffix}
+          </span>
           <button
             onClick={() => setIsResponsesOpen(true)}
             className="underline hover:text-white shrink-0 p-0.5 cursor-pointer font-bold"
           >
-            আমার ড্যাশবোর্ড
+            {t.backendMyDashboard}
           </button>
         </div>
       )}
@@ -332,3 +340,12 @@ export default function App() {
     </div>
   );
 }
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <MainApp />
+    </LanguageProvider>
+  );
+}
+

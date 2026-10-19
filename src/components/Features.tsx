@@ -5,11 +5,10 @@ import {
   Bot,
   Lock,
   Share2,
-  Gift,
-  Compass,
   ArrowRight,
 } from 'lucide-react';
 import { RevealOnScroll } from './RevealOnScroll';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface FeaturesProps {
   onStartQuiz: () => void;
@@ -24,50 +23,52 @@ export const Features: React.FC<FeaturesProps> = ({
   onOpenAiAnalysis,
   onOpenFriendshipLink,
 }) => {
+  const { language, t } = useLanguage();
+
   const cards = [
     {
-      title: 'ড্রিম উইশ কুইজ',
-      desc: 'ভ্রমণ, শখ, প্রিয় খাবার ও পছন্দের উপহার সম্পর্কিত ৫টি আকর্ষণীয় প্রশ্নের সমন্বয়ে তৈরি রোমাঞ্চকর কুইজ।',
+      title: t.featureQuizTitle,
+      desc: t.featureQuizDesc,
       icon: Heart,
-      tag: 'কোর ফিচার',
+      tag: t.featureQuizTag,
       gradient: 'from-pink-500/20 to-purple-500/20',
       border: 'border-pink-500/30',
       iconColor: 'text-pink-400',
       action: onStartQuiz,
-      btnText: 'কুইজ খেলুন',
+      btnText: t.featureQuizBtn,
     },
     {
-      title: 'OpenAI ChatGPT এনালাইসিস',
-      desc: 'স্বেচ্ছায় শেয়ার করা উত্তরের প্রাসঙ্গিকতা বিশ্লেষণ করে তৈরি হয় উপহারের সেরা আইডিয়া ও আন্তরিক বন্ধুত্বের টিপস।',
+      title: t.featureAiTitle,
+      desc: t.featureAiDesc,
       icon: Bot,
-      tag: 'AI পাওয়ারড',
+      tag: t.featureAiTag,
       gradient: 'from-sky-500/20 to-blue-500/20',
       border: 'border-sky-500/30',
       iconColor: 'text-sky-400',
       action: onOpenAiAnalysis,
-      btnText: 'বিশ্লেষণ করুন',
+      btnText: t.featureAiBtn,
     },
     {
-      title: 'সিক্রেট উইশ বক্স',
-      desc: 'নিজের মনের অব্যক্ত ইচ্ছা বা জীবনের লালিত স্বপ্ন নিরাপদে লিখে রাখুন। এটি সম্পূর্ণ ব্যক্তিগত ও সুরক্ষিত।',
+      title: t.featureWishTitle,
+      desc: t.featureWishDesc,
       icon: Lock,
-      tag: 'প্রাইভেট স্টোরেজ',
+      tag: t.featureWishTag,
       gradient: 'from-purple-500/20 to-indigo-500/20',
       border: 'border-purple-500/30',
       iconColor: 'text-purple-400',
       action: onOpenWishBox,
-      btnText: 'ইচ্ছা লিখুন',
+      btnText: t.featureWishBtn,
     },
     {
-      title: 'ইনভাইট ও ফ্রেন্ডশিপ লিংক',
-      desc: 'বন্ধুকে নিজের কুইজের লিংক পাঠিয়ে জেনে নিন সে আপনাকে কতটা বোঝে এবং তার পছন্দের রুচি কেমন।',
+      title: t.featureShareTitle,
+      desc: t.featureShareDesc,
       icon: Share2,
-      tag: 'শেয়ারেবল',
+      tag: t.featureShareTag,
       gradient: 'from-emerald-500/20 to-teal-500/20',
       border: 'border-emerald-500/30',
       iconColor: 'text-emerald-400',
       action: onOpenFriendshipLink,
-      btnText: 'লিংক তৈরি করুন',
+      btnText: t.featureShareBtn,
     },
   ];
 
@@ -78,13 +79,13 @@ export const Features: React.FC<FeaturesProps> = ({
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-500/10 border border-pink-500/20 text-pink-300 text-xs font-semibold mb-3">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>অনন্য সুবিধাসমূহ</span>
+              <span>{t.featuresBadge}</span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight font-bengali">
-              বন্ধুত্বের সম্পর্ক আরও গাঢ় ও অর্থপূর্ণ করার টুলস
+              {t.featuresTitle}
             </h2>
             <p className="mt-3.5 text-xs sm:text-base text-slate-300 font-bengali leading-relaxed">
-              সবার সামনে না বলা ছোট ছোট ইচ্ছা ও পছন্দগুলো প্রকাশের জন্য চমৎকার ডিজিটাল অভিজ্ঞতা।
+              {t.featuresSubtitle}
             </p>
           </div>
         </RevealOnScroll>
@@ -143,3 +144,4 @@ export const Features: React.FC<FeaturesProps> = ({
     </section>
   );
 };
+

@@ -1,38 +1,41 @@
 import React from 'react';
 import { Sparkles, HelpCircle, UserCheck, Bot, Gift, ArrowRight } from 'lucide-react';
 import { RevealOnScroll } from './RevealOnScroll';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface HowItWorksProps {
   onStartQuiz: () => void;
 }
 
 export const HowItWorks: React.FC<HowItWorksProps> = ({ onStartQuiz }) => {
+  const { language, t } = useLanguage();
+
   const steps = [
     {
-      num: '০১',
-      title: 'কুইজ খেলুন বা তৈরি করুন',
-      desc: 'ভ্রমণ, পছন্দের উপহার, শখ ও স্বপ্নের ওপর ভিত্তি করে সহজ ও অর্থপূর্ণ প্রশ্নগুলোর উত্তর নির্বাচন করুন।',
+      num: language === 'bn' ? '০১' : '01',
+      title: t.step1Title,
+      desc: t.step1Desc,
       icon: UserCheck,
       color: 'from-pink-500 to-rose-500',
     },
     {
-      num: '০২',
-      title: 'বন্ধুর সাথে শেয়ার করুন',
-      desc: 'কুইজ শেষের ইউনিক লিংকটি বন্ধুর সাথে শেয়ার করুন। বন্ধু তার নিজের পছন্দ স্বেচ্ছায় জানিয়ে উত্তর সাবমিট করবে।',
+      num: language === 'bn' ? '০২' : '02',
+      title: t.step2Title,
+      desc: t.step2Desc,
       icon: HelpCircle,
       color: 'from-purple-500 to-indigo-500',
     },
     {
-      num: '০৩',
-      title: 'AI দিয়ে সঠিক উপহার বুঝুন',
-      desc: 'OpenAI ChatGPT উত্তরের প্যাটার্ন পর্যালোচনা করে জানাবে কোন উপহারটি সবচেয়ে নিখুঁত ও স্মৃতিময় হবে।',
+      num: language === 'bn' ? '০৩' : '03',
+      title: t.step3Title,
+      desc: t.step3Desc,
       icon: Bot,
       color: 'from-sky-500 to-blue-500',
     },
     {
-      num: '০৪',
-      title: 'পারফেক্ট সারপ্রাইজ দিন',
-      desc: 'কোনো দ্বিধা বা অপ্রাসঙ্গিক উপহার নয়—বন্ধুকে চমকে দিন এমন কিছু দিয়ে যা সে আসলেই মনে প্রাণে চেয়েছিল!',
+      num: language === 'bn' ? '০৪' : '04',
+      title: t.step4Title,
+      desc: t.step4Desc,
       icon: Gift,
       color: 'from-emerald-500 to-teal-500',
     },
@@ -45,13 +48,13 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ onStartQuiz }) => {
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs font-semibold mb-3">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>সহজ ৪ ধাপ</span>
+              <span>{t.howBadge}</span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight font-bengali">
-              কিভাবে কাজ করে WishReveal Ai?
+              {t.howTitle}
             </h2>
             <p className="mt-3.5 text-xs sm:text-base text-slate-300 font-bengali leading-relaxed">
-              স্বচ্ছতা ও সম্মতির ভিত্তিতে তৈরি একটি সহজ ও মজাদার উপহার প্ল্যানিং জার্নি।
+              {t.howSubtitle}
             </p>
           </div>
         </RevealOnScroll>
@@ -91,7 +94,7 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ onStartQuiz }) => {
               onClick={onStartQuiz}
               className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold text-xs sm:text-sm shadow-lg shadow-pink-500/20 active:scale-95 transition-all cursor-pointer font-bengali"
             >
-              <span>এখনই একটি কুইজ শুরু করুন</span>
+              <span>{language === 'bn' ? 'এখনই একটি কুইজ শুরু করুন' : 'Start a Quiz Now'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -100,3 +103,4 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ onStartQuiz }) => {
     </section>
   );
 };
+

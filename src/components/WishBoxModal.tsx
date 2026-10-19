@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Lock, Sparkles, Plus, Trash2, Heart, Shield, CheckCircle2 } from 'lucide-react';
 import { api } from '../services/apiClient';
 import { Wish, User } from '../types/backend';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface WishBoxModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export const WishBoxModal: React.FC<WishBoxModalProps> = ({
   currentUser,
   onOpenLogin,
 }) => {
+  const { language, t } = useLanguage();
   const [wishes, setWishes] = useState<Wish[]>([]);
   const [newWishText, setNewWishText] = useState('');
   const [newWishCategory, setNewWishCategory] = useState('স্বপ্ন');
@@ -109,16 +111,16 @@ export const WishBoxModal: React.FC<WishBoxModalProps> = ({
             </div>
             <div>
               <h2 id="wish-box-modal-title" className="font-bold text-sm sm:text-base text-white">
-                সিক্রেট উইশ বক্স (Private by Default)
+                {language === 'bn' ? 'সিক্রেট উইশ বক্স (Private by Default)' : 'Secret Wish Box (Private by Default)'}
               </h2>
               <p className="text-[11px] text-purple-300/80">
-                আপনার গোপন লালিত স্বপ্ন ও ইচ্ছাগুলো একান্তই আপনার নিজের
+                {language === 'bn' ? 'আপনার গোপন লালিত স্বপ্ন ও ইচ্ছাগুলো একান্তই আপনার নিজের' : 'Your cherished dreams and wishes are strictly your own'}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            aria-label="বন্ধ করুন"
+            aria-label={t.close}
             className="w-8 h-8 rounded-full text-slate-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -132,7 +134,9 @@ export const WishBoxModal: React.FC<WishBoxModalProps> = ({
           <div className="p-3 rounded-xl bg-purple-950/40 border border-purple-500/30 text-xs text-purple-200 flex items-center gap-2">
             <Shield className="w-4 h-4 text-purple-400 shrink-0" />
             <span>
-              এই বক্সের কোনো ইচ্ছা কখনো পাবলিক ফিডে বা অন্য কারো প্রোফাইলে দেখা যাবে না।
+              {language === 'bn'
+                ? 'এই বক্সের কোনো ইচ্ছা কখনো পাবলিক ফিডে বা অন্য কারো প্রোফাইলে দেখা যাবে না।'
+                : 'No wish in this box will ever be exposed publicly or shown on anyone else’s profile.'}
             </span>
           </div>
 
@@ -143,9 +147,11 @@ export const WishBoxModal: React.FC<WishBoxModalProps> = ({
                 <Lock className="w-7 h-7" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-bold text-sm text-white">লগইন প্রয়োজন</h3>
+                <h3 className="font-bold text-sm text-white">{language === 'bn' ? 'লগইন প্রয়োজন' : 'Login Required'}</h3>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                  আপনার ব্যক্তিগত ইচ্ছাগুলো সুরক্ষিত রাখতে অনুগ্রহ করে আপনার অ্যাকাউন্টে লগইন বা সাইন আপ করুন।
+                  {language === 'bn'
+                    ? 'আপনার ব্যক্তিগত ইচ্ছাগুলো সুরক্ষিত রাখতে অনুগ্রহ করে আপনার অ্যাকাউন্টে লগইন বা সাইন আপ করুন।'
+                    : 'To protect your personal wishes, please log in or create an account.'}
                 </p>
               </div>
               <button
@@ -156,7 +162,7 @@ export const WishBoxModal: React.FC<WishBoxModalProps> = ({
                 }}
                 className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold text-xs shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
               >
-                লগইন / অ্যাকাউন্ট তৈরি করুন
+                {t.navLoginRegister}
               </button>
             </div>
           ) : (
@@ -165,18 +171,18 @@ export const WishBoxModal: React.FC<WishBoxModalProps> = ({
               <form onSubmit={handleAddWish} className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-3">
                 <div className="flex items-center justify-between">
                   <label htmlFor="wish-input" className="text-xs font-semibold text-slate-200">
-                    নতুন একটি ইচ্ছা গোপন বক্সে যোগ করুন:
+                    {language === 'bn' ? 'নতুন একটি ইচ্ছা গোপন বক্সে যোগ করুন:' : 'Add a new wish to your secret box:'}
                   </label>
                   <select
                     value={newWishCategory}
                     onChange={(e) => setNewWishCategory(e.target.value)}
                     className="px-2 py-1 rounded bg-[#080d26] border border-white/15 text-[11px] text-purple-300 focus:outline-none"
                   >
-                    <option value="স্বপ্ন">🌟 স্বপ্ন</option>
-                    <option value="ভ্রমণ">✈️ ভ্রমণ</option>
-                    <option value="উপহার">🎁 পছন্দের উপহার</option>
-                    <option value="শখ">🎨 শখ ও অবসর</option>
-                    <option value="অন্যান্য">✨ অন্যান্য</option>
+                    <option value="স্বপ্ন">🌟 {language === 'bn' ? 'স্বপ্ন' : 'Dream'}</option>
+                    <option value="ভ্রমণ">✈️ {language === 'bn' ? 'ভ্রমণ' : 'Travel'}</option>
+                    <option value="উপহার">🎁 {language === 'bn' ? 'পছন্দের উপহার' : 'Desired Gift'}</option>
+                    <option value="শখ">🎨 {language === 'bn' ? 'শখ ও অবসর' : 'Hobby & Leisure'}</option>
+                    <option value="অন্যান্য">✨ {language === 'bn' ? 'অন্যান্য' : 'Other'}</option>
                   </select>
                 </div>
 
@@ -184,7 +190,11 @@ export const WishBoxModal: React.FC<WishBoxModalProps> = ({
                   id="wish-input"
                   rows={2}
                   required
-                  placeholder="যেমন: বন্ধুদের সাথে সাজেক ট্রিপে যাওয়া বা প্রিয় বইয়ের কালেকশন সম্পন্ন করা..."
+                  placeholder={
+                    language === 'bn'
+                      ? 'যেমন: বন্ধুদের সাথে সাজেক ট্রিপে যাওয়া বা প্রিয় বইয়ের কালেকশন সম্পন্ন করা...'
+                      : 'e.g., A mountain trip with close friends, or finishing my favorite book collection...'
+                  }
                   value={newWishText}
                   onChange={(e) => setNewWishText(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-[#080d26] border border-white/15 focus:border-purple-400 focus:outline-none text-xs text-white placeholder-slate-500 resize-none"
@@ -194,7 +204,7 @@ export const WishBoxModal: React.FC<WishBoxModalProps> = ({
                   {saveSuccess ? (
                     <span className="text-[11px] text-emerald-400 flex items-center gap-1 font-semibold">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>ইচ্ছা সংরক্ষিত হয়েছে!</span>
+                      <span>{language === 'bn' ? 'ইচ্ছা সংরক্ষিত হয়েছে!' : 'Wish saved securely!'}</span>
                     </span>
                   ) : <span />}
 
@@ -204,7 +214,11 @@ export const WishBoxModal: React.FC<WishBoxModalProps> = ({
                     className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-semibold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>{isSaving ? 'সংরক্ষণ হচ্ছে...' : 'লক করে রাখুন'}</span>
+                    <span>
+                      {isSaving
+                        ? (language === 'bn' ? 'সংরক্ষণ হচ্ছে...' : 'Saving...')
+                        : (language === 'bn' ? 'লক করে রাখুন' : 'Lock & Save')}
+                    </span>
                   </button>
                 </div>
               </form>
@@ -213,16 +227,20 @@ export const WishBoxModal: React.FC<WishBoxModalProps> = ({
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-300">
-                    আপনার সংরক্ষিত গোপন ইচ্ছাসমূহ ({wishes.length}):
+                    {language === 'bn'
+                      ? `আপনার সংরক্ষিত গোপন ইচ্ছাসমূহ (${wishes.length}):`
+                      : `Your Secret Saved Wishes (${wishes.length}):`}
                   </span>
                 </div>
 
                 {isLoading ? (
-                  <p className="text-xs text-slate-400 text-center py-4">লোড হচ্ছে...</p>
+                  <p className="text-xs text-slate-400 text-center py-4">{t.loading}</p>
                 ) : wishes.length === 0 ? (
                   <div className="p-6 rounded-xl bg-white/[0.02] border border-white/5 text-center text-xs text-slate-400 space-y-1">
-                    <p>এখনো কোনো গোপন ইচ্ছা সংরক্ষণ করা হয়নি।</p>
-                    <p className="text-[11px] text-slate-500">উপরের বক্সে লিখে নিরাপদে লক করে রাখুন!</p>
+                    <p>{language === 'bn' ? 'এখনো কোনো গোপন ইচ্ছা সংরক্ষণ করা হয়নি।' : 'No secret wishes saved yet.'}</p>
+                    <p className="text-[11px] text-slate-500">
+                      {language === 'bn' ? 'উপরের বক্সে লিখে নিরাপদে লক করে রাখুন!' : 'Write above and securely lock it here!'}
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -239,14 +257,15 @@ export const WishBoxModal: React.FC<WishBoxModalProps> = ({
                             {w.text}
                           </p>
                           <span className="text-[10px] text-slate-500 block">
-                            লক করা হয়েছে: {new Date(w.createdAt).toLocaleDateString('bn-BD')}
+                            {language === 'bn' ? 'লক করা হয়েছে: ' : 'Locked on: '}
+                            {new Date(w.createdAt).toLocaleDateString(language === 'bn' ? 'bn-BD' : 'en-US')}
                           </span>
                         </div>
 
                         <button
                           type="button"
                           onClick={() => handleDeleteWish(w.id)}
-                          aria-label="ইচ্ছা মুছুন"
+                          aria-label={t.delete}
                           className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
                         >
                           <Trash2 className="w-3.5 h-3.5" />

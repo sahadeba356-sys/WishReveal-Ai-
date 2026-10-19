@@ -25,6 +25,7 @@ import {
   AnalysisResult,
   VoluntaryAnswer,
 } from '../services/aiService';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface AiAnalysisModalProps {
   isOpen: boolean;
@@ -35,7 +36,7 @@ interface AiAnalysisModalProps {
   initialVoluntaryNotes?: string;
 }
 
-const categoryQuestions = [
+const categoryQuestionsBn = [
   {
     category: 'ভ্রমণ ও প্রকৃতি',
     icon: '✈️',
@@ -93,7 +94,65 @@ const categoryQuestions = [
   },
 ];
 
-const presetScenarios = [
+const categoryQuestionsEn = [
+  {
+    category: 'Travel & Nature',
+    icon: '✈️',
+    label: 'Travel & Scenery Preferences',
+    options: [
+      'Tranquil misty mountains, clouds, and pine forests',
+      'Vibrant ocean waves, sandy shores, and sunset',
+      'Cherry blossoms and heritage cities in Japan',
+      'Historic European cafes, art galleries, and museums',
+    ],
+  },
+  {
+    category: 'Hobbies & Leisure',
+    icon: '🎨',
+    label: 'Free Time & Creative Passions',
+    options: [
+      'Getting lost in books or journaling thoughts',
+      'Gaming sessions or exploring new tech gadgets',
+      'Sketching, photography, or craft creations',
+      'Listening to music, playing instruments, or culinary adventures',
+    ],
+  },
+  {
+    category: 'Beloved Gifts',
+    icon: '🎁',
+    label: 'Gifts That Spark Pure Joy',
+    options: [
+      'Heartfelt handwritten letters & keepsake memory tokens',
+      'Smart, practical tech gadgets that elevate daily routines',
+      'Artisan chocolates, warm fragrance, or fresh floral blooms',
+      'Concert tickets or a spontaneous weekend road trip',
+    ],
+  },
+  {
+    category: 'Hangouts & Vibe',
+    icon: '☕',
+    label: 'Comfortable Hangout Styles',
+    options: [
+      'Quiet rooftop stargazing and deep late-night conversations',
+      'Exploring street food joints and cozy neighborhood cafes',
+      'Movie marathons, binge-watching series, or shared music playlists',
+      'Being a comforting, dependable presence in tough times',
+    ],
+  },
+  {
+    category: 'Deep Aspirations',
+    icon: '🌟',
+    label: 'Core Life Dreams & Visions',
+    options: [
+      'Traveling the world freely to experience diverse cultures',
+      'Leaving a meaningful positive mark through creative genius',
+      'Keeping loved ones joyful, secure, and thriving',
+      'Living a tranquil, peaceful life close to nature',
+    ],
+  },
+];
+
+const presetScenariosBn = [
   {
     name: 'তানভীর (ভ্রমণ ও পাহাড়ি পরিবেশপ্রেমী)',
     friendName: 'তানভীর',
@@ -129,6 +188,42 @@ const presetScenarios = [
   },
 ];
 
+const presetScenariosEn = [
+  {
+    name: 'Alex (Mountain Wanderer & Photo Artist)',
+    friendName: 'Alex',
+    answers: [
+      { category: 'Travel & Nature', answer: 'Tranquil misty mountains, clouds, and pine forests' },
+      { category: 'Hobbies & Leisure', answer: 'Sketching, photography, or craft creations' },
+      { category: 'Beloved Gifts', answer: 'Heartfelt handwritten letters & keepsake memory tokens' },
+      { category: 'Deep Aspirations', answer: 'Traveling the world freely to experience diverse cultures' },
+    ],
+    notes: 'Loves early morning trail walks and collects film photography.',
+  },
+  {
+    name: 'Sophia (Tech & Gaming Enthusiast)',
+    friendName: 'Sophia',
+    answers: [
+      { category: 'Travel & Nature', answer: 'Cherry blossoms and heritage cities in Japan' },
+      { category: 'Hobbies & Leisure', answer: 'Gaming sessions or exploring new tech gadgets' },
+      { category: 'Beloved Gifts', answer: 'Smart, practical tech gadgets that elevate daily routines' },
+      { category: 'Hangouts & Vibe', answer: 'Movie marathons, binge-watching series, or shared music playlists' },
+    ],
+    notes: 'Big enthusiast of mechanical keyboards and indie puzzle games.',
+  },
+  {
+    name: 'Daniel (Literature & Warm Coffee Lover)',
+    friendName: 'Daniel',
+    answers: [
+      { category: 'Travel & Nature', answer: 'Historic European cafes, art galleries, and museums' },
+      { category: 'Hobbies & Leisure', answer: 'Getting lost in books or journaling thoughts' },
+      { category: 'Hangouts & Vibe', answer: 'Quiet rooftop stargazing and deep late-night conversations' },
+      { category: 'Deep Aspirations', answer: 'Living a tranquil, peaceful life close to nature' },
+    ],
+    notes: 'Appreciates acoustic music, quiet library corners, and artisan teas.',
+  },
+];
+
 export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
   isOpen,
   onClose,
@@ -137,6 +232,10 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
   initialFriendName,
   initialVoluntaryNotes,
 }) => {
+  const { language, t } = useLanguage();
+  const categoryQuestions = language === 'bn' ? categoryQuestionsBn : categoryQuestionsEn;
+  const presetScenarios = language === 'bn' ? presetScenariosBn : presetScenariosEn;
+
   const [friendName, setFriendName] = useState(initialFriendName || '');
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [voluntaryNotes, setVoluntaryNotes] = useState(initialVoluntaryNotes || '');
@@ -285,12 +384,20 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
     }));
 
     if (!trimmedName) {
-      setValidationError('অনুগ্রহ করে আপনার বন্ধুর নাম বা একটি ছদ্মনাম লিখুন।');
+      setValidationError(
+        language === 'bn'
+          ? 'অনুগ্রহ করে আপনার বন্ধুর নাম বা একটি ছদ্মনাম লিখুন।'
+          : 'Please enter your friend’s name or a nickname.'
+      );
       return;
     }
 
     if (answerEntries.length < 2 && !voluntaryNotes.trim()) {
-      setValidationError('অনুগ্রহ করে কমপক্ষে ২টি বিষয়ের উত্তর নির্বাচন করুন বা অতিরিক্ত তথ্য লিখুন, যাতে সঠিক প্যাটার্ন বিশ্লেষণ সম্ভব হয়।');
+      setValidationError(
+        language === 'bn'
+          ? 'অনুগ্রহ করে কমপক্ষে ২টি বিষয়ের উত্তর নির্বাচন করুন বা অতিরিক্ত তথ্য লিখুন, যাতে সঠিক প্যাটার্ন বিশ্লেষণ সম্ভব হয়।'
+          : 'Please select answers for at least 2 categories or provide extra notes for an accurate preference analysis.'
+      );
       return;
     }
 
@@ -336,7 +443,9 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
         setChatQuestion('');
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'ChatGPT থেকে পরামর্শ পেতে সাময়িক সমস্যা হয়েছে।';
+      const msg = err instanceof Error
+        ? err.message
+        : (language === 'bn' ? 'ChatGPT থেকে পরামর্শ পেতে সাময়িক সমস্যা হয়েছে।' : 'Temporary issue getting advice from ChatGPT.');
       setChatError(msg);
     } finally {
       setChatLoading(false);
@@ -345,12 +454,13 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
 
   const handleCopySummary = () => {
     if (!analysisResult) return;
-    const textToCopy = `✨ WishReveal Ai - ${analysisResult.friendName}-এর পছন্দ বিশ্লেষণ\n\n` +
-      `📌 সারসংক্ষেপ:\n${analysisResult.summary}\n\n` +
-      `💡 সম্ভাব্য পছন্দসমূহ:\n` +
-      analysisResult.suggestions.map((s, idx) => `${idx + 1}. ${s.title} (${s.confidence})\n- যে উত্তরের ভিত্তিতে: "${s.supportingAnswer}"\n- কারণ: ${s.reasoning}`).join('\n\n') +
-      `\n\n🎁 উপহার আইডিয়া:\n` +
-      analysisResult.suggestedGifts.map((g, idx) => `• ${g.name} (${g.reason})`).join('\n') +
+    const isBn = language === 'bn';
+    const textToCopy = `✨ WishReveal Ai - ${analysisResult.friendName} ${isBn ? 'এর পছন্দ বিশ্লেষণ' : 'Preference Analysis'}\n\n` +
+      `📌 ${isBn ? 'সারসংক্ষেপ:' : 'Summary:'}\n${analysisResult.summary}\n\n` +
+      `💡 ${isBn ? 'সম্ভাব্য পছন্দসমূহ:' : 'Key Preferences:'}\n` +
+      analysisResult.suggestions.map((s, idx) => `${idx + 1}. ${s.title} (${s.confidence})\n- ${isBn ? 'যে উত্তরের ভিত্তিতে' : 'Based on'}: "${s.supportingAnswer}"\n- ${isBn ? 'কারণ' : 'Reasoning'}: ${s.reasoning}`).join('\n\n') +
+      `\n\n🎁 ${isBn ? 'উপহার আইডিয়া:' : 'Gift Ideas:'}\n` +
+      analysisResult.suggestedGifts.map((g) => `• ${g.name} (${g.reason})`).join('\n') +
       `\n\n⚠️ ${analysisResult.uncertaintyStatement}`;
 
     navigator.clipboard.writeText(textToCopy);
@@ -375,16 +485,18 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
             </div>
             <div className="min-w-0">
               <h2 id="ai-analysis-modal-title" className="font-bold text-sm sm:text-base text-white font-bengali truncate flex items-center gap-2">
-                <span>বন্ধুর পছন্দ বুঝুন OpenAI ChatGPT-এর সাহায্যে</span>
+                <span>{language === 'bn' ? 'বন্ধুর পছন্দ বুঝুন OpenAI ChatGPT-এর সাহায্যে' : 'Understand Friend’s Likes with OpenAI ChatGPT'}</span>
               </h2>
               <p className="text-[11px] text-sky-200/80 font-bengali truncate">
-                স্বেচ্ছায় শেয়ার করা উত্তরের প্যাটার্ন থেকে পছন্দের বিশ্লেষণ ও উপহারের আইডিয়া
+                {language === 'bn'
+                  ? 'স্বেচ্ছায় শেয়ার করা উত্তরের প্যাটার্ন থেকে পছন্দের বিশ্লেষণ ও উপহারের আইডিয়া'
+                  : 'Synthesizing voluntary responses into insightful gift ideas & preferences'}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            aria-label="বন্ধ করুন"
+            aria-label={t.close}
             className="w-8 h-8 rounded-full text-slate-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
           >
             <X className="w-5 h-5" />
@@ -398,14 +510,26 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
           <div className="p-3.5 rounded-xl bg-sky-950/40 border border-sky-500/30 text-sky-200 text-xs font-bengali space-y-1.5">
             <div className="flex items-center gap-2 font-bold text-sky-300">
               <ShieldAlert className="w-4 h-4 text-sky-400 shrink-0" />
-              <span>নীতিমালা ও গোপনীয়তার প্রতিশ্রুতি (Ethical Guidelines)</span>
+              <span>{language === 'bn' ? 'নীতিমালা ও গোপনীয়তার প্রতিশ্রুতি (Ethical Guidelines)' : 'Ethical Guidelines & Privacy Commitment'}</span>
             </div>
             <p className="leading-relaxed text-slate-300 text-[11px] sm:text-xs">
-              • <strong>মন পড়ার ভান নয়:</strong> WishReveal Ai কোনো গোপন চিন্তা পড়তে পারে না।
-              <br />
-              • <strong>স্বেচ্ছায় শেয়ারকৃত উত্তর:</strong> কেবল বন্ধু স্বেচ্ছায় যেসব উত্তর জানিয়েছেন, সেগুলোর শব্দার্থিক প্যাটার্ন মিলিয়ে সৃজনশীল আইডিয়া তৈরি হয়।
-              <br />
-              • <strong>সুরক্ষিত ব্যাকএন্ড:</strong> OpenAI API Key সম্পূর্ণ সার্ভার-সাইডে রক্ষিত থাকে এবং ব্রাউজারে কখনো দৃশ্যমান হয় না।
+              {language === 'bn' ? (
+                <>
+                  • <strong>মন পড়ার ভান নয়:</strong> WishReveal Ai কোনো গোপন চিন্তা পড়তে পারে না।
+                  <br />
+                  • <strong>স্বেচ্ছায় শেয়ারকৃত উত্তর:</strong> কেবল বন্ধু স্বেচ্ছায় যেসব উত্তর জানিয়েছেন, সেগুলোর শব্দার্থিক প্যাটার্ন মিলিয়ে সৃজনশীল আইডিয়া তৈরি হয়।
+                  <br />
+                  • <strong>সুরক্ষিত ব্যাকএন্ড:</strong> OpenAI API Key সম্পূর্ণ সার্ভার-সাইডে রক্ষিত থাকে এবং ব্রাউজারে কখনো দৃশ্যমান হয় না।
+                </>
+              ) : (
+                <>
+                  • <strong>No Mind-Reading Claims:</strong> WishReveal Ai never purports to read unexpressed private thoughts.
+                  <br />
+                  • <strong>Voluntary Responses Only:</strong> Insights are synthesized solely from answers freely shared by your friend.
+                  <br />
+                  • <strong>Secure Architecture:</strong> The OPENAI_API_KEY is safeguarded strictly server-side and never leaks to browser traffic.
+                </>
+              )}
             </p>
           </div>
 
@@ -418,7 +542,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-300 font-bengali flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                    <span>দ্রুত নমুনা প্রোফাইল দিয়ে পরখ করুন:</span>
+                    <span>{language === 'bn' ? 'দ্রুত নমুনা প্রোফাইল দিয়ে পরখ করুন:' : 'Try a quick sample scenario:'}</span>
                   </span>
                   {(friendName || Object.keys(selectedAnswers).length > 0) && (
                     <button
@@ -427,7 +551,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                       className="text-[11px] text-pink-400 hover:underline cursor-pointer flex items-center gap-1 font-bengali"
                     >
                       <RefreshCw className="w-3 h-3" />
-                      <span>ফর্ম রিসেট</span>
+                      <span>{language === 'bn' ? 'ফর্ম রিসেট' : 'Reset Form'}</span>
                     </button>
                   )}
                 </div>
@@ -448,13 +572,13 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
               {/* Friend's Name Field */}
               <div className="space-y-1.5">
                 <label htmlFor="friend-name-input" className="block text-xs font-semibold text-sky-300 font-bengali">
-                  বন্ধুর নাম বা ডাকনাম <span className="text-rose-400">*</span>
+                  {language === 'bn' ? 'বন্ধুর নাম বা ডাকনাম' : 'Friend’s Name or Nickname'} <span className="text-rose-400">*</span>
                 </label>
                 <input
                   id="friend-name-input"
                   type="text"
                   required
-                  placeholder="যেমন: তানভীর, সাদিয়া, ফাহিম..."
+                  placeholder={language === 'bn' ? 'যেমন: তানভীর, সাদিয়া, ফাহিম...' : 'e.g., Alex, Sophia, Daniel...'}
                   value={friendName}
                   onChange={(e) => {
                     setFriendName(e.target.value);
@@ -470,10 +594,10 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-semibold text-sky-300 font-bengali flex items-center gap-1.5">
                     <UserCheck className="w-3.5 h-3.5 text-sky-400" />
-                    <span>বন্ধুর স্বেচ্ছায় দেওয়া উত্তরগুলো নির্বাচন করুন (কমপক্ষে ২টি):</span>
+                    <span>{language === 'bn' ? 'বন্ধুর স্বেচ্ছায় দেওয়া উত্তরগুলো নির্বাচন করুন (কমপক্ষে ২টি):' : 'Select your friend’s voluntary answers (at least 2):'}</span>
                   </label>
                   <span className="text-[11px] text-sky-400/90 font-medium">
-                    {Object.keys(selectedAnswers).length} / {categoryQuestions.length} টি নির্বাচিত
+                    {Object.keys(selectedAnswers).length} / {categoryQuestions.length} {language === 'bn' ? 'টি নির্বাচিত' : 'Selected'}
                   </span>
                 </div>
 
@@ -492,7 +616,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                           </span>
                           {currentSelection && (
                             <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 font-bengali">
-                              নির্বাচিত
+                              {language === 'bn' ? 'নির্বাচিত' : 'Selected'}
                             </span>
                           )}
                         </div>
@@ -530,12 +654,16 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
               {/* Additional voluntary notes */}
               <div className="space-y-1.5">
                 <label htmlFor="friend-notes-input" className="block text-xs font-semibold text-slate-300 font-bengali">
-                  অতিরিক্ত কোনো কথা বা প্রিয় জিনিসের তথ্য (ঐচ্ছিক):
+                  {language === 'bn' ? 'অতিরিক্ত কোনো কথা বা প্রিয় জিনিসের তথ্য (ঐচ্ছিক):' : 'Additional hints or favorite preferences (Optional):'}
                 </label>
                 <textarea
                   id="friend-notes-input"
                   rows={2}
-                  placeholder="যেমন: বন্ধু বিড়াল খুব পছন্দ করে এবং প্রায়ই পাহাড়ের ছবি তোলে..."
+                  placeholder={
+                    language === 'bn'
+                      ? 'যেমন: বন্ধু বিড়াল খুব পছন্দ করে এবং প্রায়ই পাহাড়ের ছবি তোলে...'
+                      : 'e.g., Loves cozy coffee spots, photography, and collecting retro vinyl...'
+                  }
                   value={voluntaryNotes}
                   onChange={(e) => setVoluntaryNotes(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-[#080d26] border border-white/15 focus:border-sky-400 focus:outline-none text-xs text-white placeholder-slate-500 font-bengali resize-none"
@@ -562,7 +690,9 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                   <div className="flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                     <div>
-                      <strong className="block text-rose-300">AI যোগাযোগে সমস্যা হয়েছে:</strong>
+                      <strong className="block text-rose-300">
+                        {language === 'bn' ? 'AI যোগাযোগে সমস্যা হয়েছে:' : 'AI Communication Error:'}
+                      </strong>
                       <p className="text-[11px] text-rose-200/90 leading-relaxed">{apiError}</p>
                     </div>
                   </div>
@@ -575,7 +705,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                       className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
-                      <span>পুনরায় চেষ্টা করুন (Retry)</span>
+                      <span>{language === 'bn' ? 'পুনরায় চেষ্টা করুন (Retry)' : 'Retry Request'}</span>
                     </button>
 
                     <button
@@ -584,7 +714,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                       disabled={isLoading}
                       className="px-3.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                     >
-                      <span>ডেমো মোডে ফলাফল দেখুন</span>
+                      <span>{language === 'bn' ? 'ডেমো মোডে ফলাফল দেখুন' : 'View in Demo Mode'}</span>
                     </button>
                   </div>
                 </div>
@@ -598,7 +728,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                   className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 active:scale-[0.99] text-white font-bold text-xs sm:text-sm shadow-lg shadow-sky-500/25 flex items-center justify-center gap-2 cursor-pointer transition-all min-h-[46px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 font-bengali"
                 >
                   <Bot className="w-4 h-4" />
-                  <span>OpenAI ChatGPT দিয়ে বিশ্লেষণ শুরু করুন</span>
+                  <span>{language === 'bn' ? 'OpenAI ChatGPT দিয়ে বিশ্লেষণ শুরু করুন' : 'Start Analysis with OpenAI ChatGPT'}</span>
                 </button>
               </div>
 
@@ -616,7 +746,11 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                       : 'bg-amber-500/20 text-amber-300 border-amber-400/30'
                   }`}>
                     <Sparkles className="w-3 h-3" />
-                    <span>{analysisResult.mode === 'real_ai' ? 'লাইভ AI ইঞ্জিন সক্রিয়' : 'স্মার্ট ডেমো মোড'}</span>
+                    <span>
+                      {analysisResult.mode === 'real_ai'
+                        ? (language === 'bn' ? 'লাইভ AI ইঞ্জিন সক্রিয়' : 'Live AI Engine Active')
+                        : (language === 'bn' ? 'স্মার্ট ডেমো মোড' : 'Smart Demo Mode')}
+                    </span>
                   </span>
                   <span className="text-[11px] text-slate-300 font-medium">
                     {analysisResult.providerName}
@@ -628,7 +762,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                   className="text-xs text-sky-400 hover:text-sky-300 hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <RefreshCw className="w-3 h-3" />
-                  <span>নতুন বিশ্লেষণ</span>
+                  <span>{language === 'bn' ? 'নতুন বিশ্লেষণ' : 'New Analysis'}</span>
                 </button>
               </div>
 
@@ -637,9 +771,14 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                 <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs font-bengali flex items-start gap-2">
                   <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                   <div className="space-y-0.5">
-                    <span className="font-bold block text-amber-300">স্বচ্ছতা বিজ্ঞপ্তি: এটি একটি ডেমো মোড</span>
+                    <span className="font-bold block text-amber-300">
+                      {language === 'bn' ? 'স্বচ্ছতা বিজ্ঞপ্তি: এটি একটি ডেমো মোড' : 'Transparency Notice: Running in Demo Mode'}
+                    </span>
                     <p className="text-[11px] text-amber-100/90 leading-relaxed">
-                      {analysisResult.demoNotice || 'ব্যাকএন্ডে OPENAI_API_KEY কনফিগার করা না থাকায় এটি একটি ডেমো অ্যালগরিদম দিয়ে প্রস্তুত করা হয়েছে। লাইভ ChatGPT উত্তরের জন্য OPENAI_API_KEY সেট করুন।'}
+                      {analysisResult.demoNotice ||
+                        (language === 'bn'
+                          ? 'ব্যাকএন্ডে OPENAI_API_KEY কনফিগার করা না থাকায় এটি একটি ডেমো অ্যালগরিদম দিয়ে প্রস্তুত করা হয়েছে। লাইভ ChatGPT উত্তরের জন্য OPENAI_API_KEY সেট করুন।'
+                          : 'Generated using safe demo heuristics as OPENAI_API_KEY is not configured on the backend. Add an OPENAI_API_KEY for live responses.')}
                     </p>
                   </div>
                 </div>
@@ -649,7 +788,11 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
               <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-sky-950/40 via-indigo-950/30 to-purple-950/40 border border-sky-500/30 space-y-3 font-bengali">
                 <div className="flex items-center gap-2 text-sky-300 font-bold text-sm sm:text-base">
                   <Heart className="w-4 h-4 text-pink-400 fill-pink-400 shrink-0" />
-                  <span>{analysisResult.friendName}-এর শেয়ারকৃত উত্তরের বিশ্লেষণ সারসংক্ষেপ</span>
+                  <span>
+                    {language === 'bn'
+                      ? `${analysisResult.friendName}-এর শেয়ারকৃত উত্তরের বিশ্লেষণ সারসংক্ষেপ`
+                      : `Analysis Summary for ${analysisResult.friendName}’s Responses`}
+                  </span>
                 </div>
                 <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
                   {analysisResult.summary}
@@ -660,7 +803,9 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
               <div className="p-3 rounded-xl bg-blue-950/40 border border-blue-500/30 text-blue-200 text-xs font-bengali flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
-                  <span className="font-bold block text-blue-300">অনিশ্চয়তা ও সম্ভাবনার মাত্রা</span>
+                  <span className="font-bold block text-blue-300">
+                    {language === 'bn' ? 'অনিশ্চয়তা ও সম্ভাবনার মাত্রা' : 'Confidence & Uncertainty Context'}
+                  </span>
                   <p className="text-[11px] text-blue-100/90 leading-relaxed">
                     {analysisResult.uncertaintyStatement}
                   </p>
@@ -671,7 +816,11 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
               <div className="space-y-3 font-bengali">
                 <h3 className="text-xs sm:text-sm font-bold text-sky-300 flex items-center gap-1.5">
                   <Compass className="w-4 h-4 text-sky-400" />
-                  <span>সম্ভাব্য পছন্দ ও আগ্রহসমূহ (প্রমাণ ও যুক্তিসহ):</span>
+                  <span>
+                    {language === 'bn'
+                      ? 'সম্ভাব্য পছন্দ ও আগ্রহসমূহ (প্রমাণ ও যুক্তিসহ):'
+                      : 'Key Preferences & Interests (With Supporting Signals):'}
+                  </span>
                 </h3>
 
                 <div className="space-y-2.5">
@@ -698,11 +847,11 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
 
                       <div className="ml-6 p-2.5 rounded-lg bg-black/25 border border-white/5 space-y-1 text-[11px]">
                         <div className="text-amber-300/90 font-medium flex items-center gap-1">
-                          <span>📌 সমর্থনকারী উত্তর:</span>
+                          <span>{language === 'bn' ? '📌 সমর্থনকারী উত্তর:' : '📌 Supporting Signal:'}</span>
                           <span className="text-white">"{sug.supportingAnswer}"</span>
                         </div>
                         <div className="text-slate-400 flex items-start gap-1">
-                          <span className="shrink-0">💡 কারণ:</span>
+                          <span className="shrink-0">{language === 'bn' ? '💡 কারণ:' : '💡 Rationale:'}</span>
                           <span className="text-slate-300">{sug.reasoning}</span>
                         </div>
                       </div>
@@ -716,7 +865,11 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                 <div className="space-y-3 pt-2 font-bengali">
                   <h3 className="text-xs sm:text-sm font-bold text-pink-300 flex items-center gap-1.5">
                     <Gift className="w-4 h-4 text-pink-400" />
-                    <span>সম্ভাব্য সারপ্রাইজ উপহার আইডিয়াসমূহ (পরামর্শ মাত্র):</span>
+                    <span>
+                      {language === 'bn'
+                        ? 'সম্ভাব্য সারপ্রাইজ উপহার আইডিয়াসমূহ (পরামর্শ মাত্র):'
+                        : 'Thoughtful Surprise Gift Ideas (Inspirational Only):'}
+                    </span>
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -733,7 +886,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                           {gift.reason}
                         </p>
                         <span className="block text-[10px] text-pink-300/70 pt-0.5">
-                          ভিত্তিক: "{gift.supportingAnswer}"
+                          {language === 'bn' ? 'ভিত্তিক: ' : 'Based on: '} "{gift.supportingAnswer}"
                         </span>
                       </div>
                     ))}
@@ -745,7 +898,9 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
               <div className="p-3.5 rounded-xl bg-purple-950/30 border border-purple-500/30 text-purple-200 text-xs font-bengali flex items-start gap-2">
                 <Sparkles className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
-                  <span className="font-bold text-purple-300 block">বন্ধুত্বের আন্তরিক পরামর্শ:</span>
+                  <span className="font-bold text-purple-300 block">
+                    {language === 'bn' ? 'বন্ধুত্বের আন্তরিক পরামর্শ:' : 'Friendship Advice:'}
+                  </span>
                   <p className="text-[11px] text-purple-100/90 leading-relaxed">
                     {analysisResult.friendshipTip}
                   </p>
@@ -756,31 +911,49 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
               <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-[#0c1638] to-[#121136] border border-sky-500/30 space-y-3 font-bengali">
                 <div className="flex items-center gap-2 text-sky-300 font-bold text-xs sm:text-sm">
                   <Bot className="w-4 h-4 text-sky-400" />
-                  <span>ChatGPT-এর কাছে সরাসরি আরও পরামর্শ চান:</span>
+                  <span>{language === 'bn' ? 'ChatGPT-এর কাছে সরাসরি আরও পরামর্শ চান:' : 'Consult ChatGPT for Deeper Suggestions:'}</span>
                 </div>
 
                 {/* Quick Chips */}
                 <div className="flex flex-wrap gap-1.5">
                   <button
                     type="button"
-                    onClick={() => handleAskChatGpt(`${analysisResult.friendName}-এর জন্য ৫০০-১০০০ টাকার মধ্যে একটি সারপ্রাইজ উপহার আইডিয়া দিন`)}
+                    onClick={() =>
+                      handleAskChatGpt(
+                        language === 'bn'
+                          ? `${analysisResult.friendName}-এর জন্য ৫০০-১০০০ টাকার মধ্যে একটি সারপ্রাইজ উপহার আইডিয়া দিন`
+                          : `Suggest a thoughtful budget-friendly surprise gift for ${analysisResult.friendName}`
+                      )
+                    }
                     className="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-slate-300 hover:text-white transition-colors cursor-pointer"
                   >
-                    🎁 বাজেট উপহার আইডিয়া
+                    🎁 {language === 'bn' ? 'বাজেট উপহার আইডিয়া' : 'Budget Gift Ideas'}
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleAskChatGpt(`${analysisResult.friendName}-এর জন্য একটি মন ছুঁয়ে যাওয়া জন্মদিনের শুভেচ্ছা বার্তা লিখে দিন`)}
+                    onClick={() =>
+                      handleAskChatGpt(
+                        language === 'bn'
+                          ? `${analysisResult.friendName}-এর জন্য একটি মন ছুঁয়ে যাওয়া জন্মদিনের শুভেচ্ছা বার্তা লিখে দিন`
+                          : `Write a heartwarming, personalized birthday greeting for ${analysisResult.friendName}`
+                      )
+                    }
                     className="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-slate-300 hover:text-white transition-colors cursor-pointer"
                   >
-                    💌 জন্মদিনের শুভেচ্ছা বার্তা
+                    💌 {language === 'bn' ? 'জন্মদিনের শুভেচ্ছা বার্তা' : 'Birthday Greeting'}
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleAskChatGpt(`${analysisResult.friendName}-এর সাথে আড্ডা আরও জমজমাট করতে চমৎকার কোনো প্ল্যানিং টিপস দিন`)}
+                    onClick={() =>
+                      handleAskChatGpt(
+                        language === 'bn'
+                          ? `${analysisResult.friendName}-এর সাথে আড্ডা আরও জমজমাট করতে চমৎকার কোনো প্ল্যানিং টিপস দিন`
+                          : `Give a memorable weekend hangout plan to enjoy with ${analysisResult.friendName}`
+                      )
+                    }
                     className="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-slate-300 hover:text-white transition-colors cursor-pointer"
                   >
-                    ☕ আড্ডার চমৎকার প্ল্যান
+                    ☕ {language === 'bn' ? 'আড্ডার চমৎকার প্ল্যান' : 'Hangout Ideas'}
                   </button>
                 </div>
 
@@ -788,7 +961,11 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder={`যেমন: ${analysisResult.friendName}-এর সাথে সারপ্রাইজ পার্টির আইডিয়া...`}
+                    placeholder={
+                      language === 'bn'
+                        ? `যেমন: ${analysisResult.friendName}-এর সাথে সারপ্রাইজ পার্টির আইডিয়া...`
+                        : `e.g., A special celebration surprise for ${analysisResult.friendName}...`
+                    }
                     value={chatQuestion}
                     onChange={(e) => setChatQuestion(e.target.value)}
                     onKeyDown={(e) => {
@@ -806,7 +983,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                     className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 active:scale-95 disabled:bg-white/10 disabled:text-slate-500 text-white font-semibold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     {chatLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                    <span>জানুন</span>
+                    <span>{language === 'bn' ? 'জানুন' : 'Ask'}</span>
                   </button>
                 </div>
 
@@ -816,7 +993,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                     <div className="flex items-center justify-between text-[11px] text-sky-300 font-semibold border-b border-white/10 pb-1.5">
                       <span className="flex items-center gap-1.5">
                         <Bot className="w-3.5 h-3.5 text-sky-400" />
-                        <span>ChatGPT-এর পরামর্শ:</span>
+                        <span>{language === 'bn' ? 'ChatGPT-এর পরামর্শ:' : 'ChatGPT Recommendation:'}</span>
                       </span>
                       <button
                         type="button"
@@ -828,7 +1005,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                         className="text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer"
                       >
                         {chatCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                        <span>{chatCopied ? 'কপি হয়েছে' : 'কপি'}</span>
+                        <span>{chatCopied ? (language === 'bn' ? 'কপি হয়েছে' : 'Copied') : (language === 'bn' ? 'কপি' : 'Copy')}</span>
                       </button>
                     </div>
                     <div className="leading-relaxed whitespace-pre-wrap text-slate-300 text-[11px] sm:text-xs">
@@ -845,7 +1022,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                       onClick={() => handleAskChatGpt()}
                       className="px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-semibold cursor-pointer shrink-0"
                     >
-                      আবার চেষ্টা করুন
+                      {language === 'bn' ? 'আবার চেষ্টা করুন' : 'Retry'}
                     </button>
                   </div>
                 )}
@@ -859,7 +1036,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                   className="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/15 active:scale-98 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer min-h-[42px] border border-white/10"
                 >
                   {hasCopied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                  <span>{hasCopied ? 'কপি সম্পন্ন হয়েছে!' : 'ফলাফল কপি করুন'}</span>
+                  <span>{hasCopied ? (language === 'bn' ? 'কপি সম্পন্ন হয়েছে!' : 'Copied to Clipboard!') : (language === 'bn' ? 'ফলাফল কপি করুন' : 'Copy Results')}</span>
                 </button>
 
                 <button
@@ -871,7 +1048,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
                   className="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 active:scale-98 text-white font-semibold text-xs shadow-md shadow-pink-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer min-h-[42px]"
                 >
                   <Gift className="w-4 h-4" />
-                  <span>নিজের কুইজ খেলে দেখুন</span>
+                  <span>{language === 'bn' ? 'নিজের কুইজ খেলে দেখুন' : 'Take a Quiz Yourself'}</span>
                 </button>
               </div>
 
@@ -894,12 +1071,24 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
 
             <div className="space-y-1.5 max-w-sm">
               <h4 className="text-base font-bold text-white">
-                {loadingStep === 0 && '🔍 স্বেচ্ছায় প্রদত্ত উত্তরগুলো যাচাই করা হচ্ছে...'}
-                {loadingStep === 1 && '💡 OpenAI ChatGPT-এর সাথে যোগাযোগ হচ্ছে...'}
-                {loadingStep === 2 && '✨ নিরাপদ ও অর্থবহ উপহার আইডিয়া প্রস্তুত হচ্ছে...'}
+                {language === 'bn' ? (
+                  <>
+                    {loadingStep === 0 && '🔍 স্বেচ্ছায় প্রদত্ত উত্তরগুলো যাচাই করা হচ্ছে...'}
+                    {loadingStep === 1 && '💡 OpenAI ChatGPT-এর সাথে যোগাযোগ হচ্ছে...'}
+                    {loadingStep === 2 && '✨ নিরাপদ ও অর্থবহ উপহার আইডিয়া প্রস্তুত হচ্ছে...'}
+                  </>
+                ) : (
+                  <>
+                    {loadingStep === 0 && '🔍 Verifying voluntary response signals...'}
+                    {loadingStep === 1 && '💡 Connecting to OpenAI ChatGPT API...'}
+                    {loadingStep === 2 && '✨ Generating personalized gift suggestions...'}
+                  </>
+                )}
               </h4>
               <p className="text-xs text-sky-200/80">
-                {friendName}-এর উত্তর থেকে পছন্দের নিখুঁত বিশ্লেষণ প্রস্তুত হচ্ছে
+                {language === 'bn'
+                  ? `${friendName}-এর উত্তর থেকে পছন্দের নিখুঁত বিশ্লেষণ প্রস্তুত হচ্ছে`
+                  : `Synthesizing preferences and recommendations for ${friendName}`}
               </p>
             </div>
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Sparkles, Plus, Trash2, CheckCircle2, Lock, Share2 } from 'lucide-react';
 import { api } from '../services/apiClient';
 import { Quiz, User } from '../types/backend';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface CreateQuizModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
   onQuizCreated,
   onOpenLogin,
 }) => {
+  const { language, t } = useLanguage();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [theme, setTheme] = useState('dreams');
@@ -26,24 +28,24 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
   >([
     {
       id: 'q_1',
-      question: 'যদি যেকোনো জায়গায় ঘুরে আসার সুযোগ পান, প্রথম পছন্দ কোথায়?',
-      category: 'ভ্রমণ ও প্রকৃতি',
+      question: language === 'bn' ? 'যদি যেকোনো জায়গায় ঘুরে আসার সুযোগ পান, প্রথম পছন্দ কোথায়?' : 'If you could travel anywhere right now, where would you go first?',
+      category: language === 'bn' ? 'ভ্রমণ ও প্রকৃতি' : 'Travel & Nature',
       categoryIcon: '✈️',
       options: [
-        { text: 'পাহাড়ের শান্ত কুয়াশা ও পাইন বন' },
-        { text: 'সমুদ্রের উত্তাল নীল ঢেউ ও সূর্যাস্ত' },
-        { text: 'জাপানের চেরি ব্লসম ও প্রাচীন ঐতিহ্যের ঐতিহাসিক শহর' },
+        { text: language === 'bn' ? 'পাহাড়ের শান্ত কুয়াশা ও পাইন বন' : 'Serene foggy mountains and pine forests' },
+        { text: language === 'bn' ? 'সমুদ্রের উত্তাল নীল ঢেউ ও সূর্যাস্ত' : 'Ocean waves, sandy shores, and sunset' },
+        { text: language === 'bn' ? 'জাপানের চেরি ব্লসম ও প্রাচীন ঐতিহ্যের ঐতিহাসিক শহর' : 'Cherry blossoms and historic heritage cities' },
       ],
     },
     {
       id: 'q_2',
-      question: 'কেমন উপহার পেলে আপনার মুখে সবচেয়ে খাঁটি হাসি ফুটে উঠবে?',
-      category: 'পছন্দের উপহার',
+      question: language === 'bn' ? 'কেমন উপহার পেলে আপনার মুখে সবচেয়ে খাঁটি হাসি ফুটে উঠবে?' : 'What kind of gift brings the most genuine smile to your face?',
+      category: language === 'bn' ? 'পছন্দের উপহার' : 'Beloved Gifts',
       categoryIcon: '🎁',
       options: [
-        { text: 'কাছের মানুষের হাতে লেখা আবেগমাখা চিঠি' },
-        { text: 'দৈনন্দিন কাজে সহায়ক স্মার্ট টেক গ্যাজেট' },
-        { text: 'একসাথে কোনো সারপ্রাইজ ডে-আউট ট্রিপ' },
+        { text: language === 'bn' ? 'কাছের মানুষের হাতে লেখা আবেগমাখা চিঠি' : 'A heartfelt handwritten letter from someone special' },
+        { text: language === 'bn' ? 'দৈনন্দিন কাজে সহায়ক স্মার্ট টেক গ্যাজেট' : 'A smart and useful gadget for daily convenience' },
+        { text: language === 'bn' ? 'একসাথে কোনো সারপ্রাইজ ডে-আউট ট্রিপ' : 'A spontaneous shared day-out adventure' },
       ],
     },
   ]);
@@ -109,18 +111,24 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
     setErrorMessage(null);
 
     if (!title.trim() || title.trim().length < 3) {
-      setErrorMessage('কুইজের শিরোনাম লিখুন (কমপক্ষে ৩ অক্ষর)।');
+      setErrorMessage(
+        language === 'bn' ? 'কুইজের শিরোনাম লিখুন (কমপক্ষে ৩ অক্ষর)।' : 'Please enter a quiz title (min 3 characters).'
+      );
       return;
     }
 
     for (let i = 0; i < questions.length; i++) {
       if (!questions[i].question.trim()) {
-        setErrorMessage(`প্রশ্ন #${i + 1}-এর বিবরণ ফাঁকা রাখা যাবে না।`);
+        setErrorMessage(
+          language === 'bn' ? `প্রশ্ন #${i + 1}-এর বিবরণ ফাঁকা রাখা যাবে না।` : `Question #${i + 1} text cannot be empty.`
+        );
         return;
       }
       for (let j = 0; j < questions[i].options.length; j++) {
         if (!questions[i].options[j].text.trim()) {
-          setErrorMessage(`প্রশ্ন #${i + 1}-এর অপশন #${j + 1} লিখুন।`);
+          setErrorMessage(
+            language === 'bn' ? `প্রশ্ন #${i + 1}-এর অপশন #${j + 1} লিখুন।` : `Please enter option #${j + 1} for Question #${i + 1}.`
+          );
           return;
         }
       }
@@ -146,7 +154,11 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
       onQuizCreated(created);
       onClose();
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : 'কুইজ তৈরিতে সমস্যা হয়েছে।');
+      setErrorMessage(
+        err instanceof Error
+          ? err.message
+          : (language === 'bn' ? 'কুইজ তৈরিতে সমস্যা হয়েছে।' : 'Error creating quiz.')
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -169,16 +181,18 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
             </div>
             <div>
               <h2 id="create-quiz-modal-title" className="font-bold text-sm sm:text-base text-white">
-                কাস্টম ফ্রেন্ডশিপ কুইজ তৈরি করুন
+                {language === 'bn' ? 'কাস্টম ফ্রেন্ডশিপ কুইজ তৈরি করুন' : 'Create Custom Friendship Quiz'}
               </h2>
               <p className="text-[11px] text-pink-300/80">
-                বন্ধুদের সাথে শেয়ার করে তাদের পছন্দ ও ইচ্ছা জানার কুইজ
+                {language === 'bn'
+                  ? 'বন্ধুদের সাথে শেয়ার করে তাদের পছন্দ ও ইচ্ছা জানার কুইজ'
+                  : 'Share with friends to discover their genuine wishes & likes'}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            aria-label="বন্ধ করুন"
+            aria-label={t.close}
             className="w-8 h-8 rounded-full text-slate-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -193,9 +207,11 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
                 <Lock className="w-7 h-7" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-bold text-sm text-white">লগইন প্রয়োজন</h3>
+                <h3 className="font-bold text-sm text-white">{language === 'bn' ? 'লগইন প্রয়োজন' : 'Login Required'}</h3>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                  কুইজ তৈরি ও রেসপন্স ট্র্যাক করতে অনুগ্রহ করে আপনার অ্যাকাউন্টে লগইন করুন।
+                  {language === 'bn'
+                    ? 'কুইজ তৈরি ও রেসপন্স ট্র্যাক করতে অনুগ্রহ করে আপনার অ্যাকাউন্টে লগইন করুন।'
+                    : 'To create quizzes and track responses, please log into your account.'}
                 </p>
               </div>
               <button
@@ -206,19 +222,19 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
                 }}
                 className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold text-xs shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer"
               >
-                লগইন / রেজিস্টার করুন
+                {t.navLoginRegister}
               </button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1">
                 <label className="block text-xs font-semibold text-slate-300">
-                  কুইজের নাম বা শিরোনাম <span className="text-pink-400">*</span>
+                  {language === 'bn' ? 'কুইজের নাম বা শিরোনাম' : 'Quiz Title'} <span className="text-pink-400">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="যেমন: তানভীরের ফ্রেন্ডশিপ উইশ কুইজ..."
+                  placeholder={language === 'bn' ? 'যেমন: তানভীরের ফ্রেন্ডশিপ উইশ কুইজ...' : 'e.g., Alex’s Friendship Wish Quiz...'}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-[#080d26] border border-white/15 focus:border-pink-400 focus:outline-none text-xs text-white"
@@ -227,11 +243,15 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
 
               <div className="space-y-1">
                 <label className="block text-xs font-semibold text-slate-300">
-                  বিবরণ বা বন্ধুদের উদ্দেশ্যে বার্তা (ঐচ্ছিক):
+                  {language === 'bn' ? 'বিবরণ বা বন্ধুদের উদ্দেশ্যে বার্তা (ঐচ্ছিক):' : 'Description or Note to Friends (Optional):'}
                 </label>
                 <input
                   type="text"
-                  placeholder="যেমন: আমার প্রিয় বন্ধুরা কে আমাকে কতটা চেনে এবং তাদের পছন্দ কেমন তা জানার কুইজ!"
+                  placeholder={
+                    language === 'bn'
+                      ? 'যেমন: আমার প্রিয় বন্ধুরা কে আমাকে কতটা চেনে এবং তাদের পছন্দ কেমন তা জানার কুইজ!'
+                      : 'e.g., Discover how well we know each other and what we secretly wish for!'
+                  }
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-[#080d26] border border-white/15 focus:border-pink-400 focus:outline-none text-xs text-white"
@@ -242,7 +262,7 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
               <div className="space-y-4 pt-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-200">
-                    কুইজের প্রশ্নসমূহ ({questions.length}/8):
+                    {language === 'bn' ? `কুইজের প্রশ্নসমূহ (${questions.length}/8):` : `Quiz Questions (${questions.length}/8):`}
                   </span>
                   {questions.length < 8 && (
                     <button
@@ -251,7 +271,7 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
                       className="text-xs text-pink-400 hover:text-pink-300 hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>প্রশ্ন যোগ করুন</span>
+                      <span>{language === 'bn' ? 'প্রশ্ন যোগ করুন' : 'Add Question'}</span>
                     </button>
                   )}
                 </div>
@@ -261,7 +281,7 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
                     <div key={q.id} className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 space-y-2.5">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-pink-300">
-                          প্রশ্ন #{qIdx + 1}
+                          {language === 'bn' ? `প্রশ্ন #${qIdx + 1}` : `Question #${qIdx + 1}`}
                         </span>
                         {questions.length > 1 && (
                           <button
@@ -270,7 +290,7 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
                             className="text-slate-400 hover:text-rose-400 text-xs flex items-center gap-0.5 cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
-                            <span>মুছুন</span>
+                            <span>{language === 'bn' ? 'মুছুন' : 'Remove'}</span>
                           </button>
                         )}
                       </div>
@@ -278,7 +298,7 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
                       <input
                         type="text"
                         required
-                        placeholder="প্রশ্নটি লিখুন..."
+                        placeholder={language === 'bn' ? 'প্রশ্নটি লিখুন...' : 'Type your question...'}
                         value={q.question}
                         onChange={(e) => {
                           const updated = [...questions];
@@ -290,13 +310,15 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
 
                       {/* Options */}
                       <div className="space-y-1.5 pl-2 border-l-2 border-pink-500/20">
-                        <span className="text-[11px] text-slate-400 block font-medium">অপশনসমূহ:</span>
+                        <span className="text-[11px] text-slate-400 block font-medium">
+                          {language === 'bn' ? 'অপশনসমূহ:' : 'Options:'}
+                        </span>
                         {q.options.map((opt, optIdx) => (
                           <div key={optIdx} className="flex items-center gap-2">
                             <input
                               type="text"
                               required
-                              placeholder={`অপশন ${optIdx + 1}`}
+                              placeholder={language === 'bn' ? `অপশন ${optIdx + 1}` : `Option ${optIdx + 1}`}
                               value={opt.text}
                               onChange={(e) => {
                                 const updated = [...questions];
@@ -323,7 +345,7 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
                             onClick={() => handleAddOption(qIdx)}
                             className="text-[11px] text-sky-400 hover:underline pt-0.5 cursor-pointer block"
                           >
-                            + আরও একটি অপশন যোগ করুন
+                            {language === 'bn' ? '+ আরও একটি অপশন যোগ করুন' : '+ Add another option'}
                           </button>
                         )}
                       </div>
@@ -344,7 +366,11 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
                 className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:brightness-110 active:scale-95 disabled:opacity-50 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Sparkles className="w-4 h-4" />
-                <span>{isSubmitting ? 'কুইজ তৈরি হচ্ছে...' : 'কুইজ সম্পন্ন করুন ও শেয়ার লিংক পান'}</span>
+                <span>
+                  {isSubmitting
+                    ? (language === 'bn' ? 'কুইজ তৈরি হচ্ছে...' : 'Creating Quiz...')
+                    : (language === 'bn' ? 'কুইজ সম্পন্ন করুন ও শেয়ার লিংক পান' : 'Finish Quiz & Generate Share Link')}
+                </span>
               </button>
             </form>
           )}

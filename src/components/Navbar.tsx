@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Sparkles, Heart, Menu, X, Gift, Bot, User as UserIcon, LogOut, Settings } from 'lucide-react';
+import { Sparkles, Heart, Menu, X, Gift, Bot, User as UserIcon, LogOut, Settings, Languages } from 'lucide-react';
 import { User } from '../types/backend';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface NavbarProps {
   onStartQuiz: () => void;
@@ -24,6 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLogout,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { language, setLanguage, t } = useLanguage();
 
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-[#080c1e]/85 border-b border-white/10 transition-all duration-300">
@@ -35,44 +37,74 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
           <div className="flex flex-col">
             <span className="font-extrabold text-lg sm:text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-pink-400 via-purple-300 to-indigo-300 font-brand">
-              WishReveal <span className="text-pink-400 text-xs sm:text-sm font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-pink-500/10 border border-pink-500/20 ml-0.5">Ai</span>
+              {t.appName} <span className="text-pink-400 text-xs sm:text-sm font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-pink-500/10 border border-pink-500/20 ml-0.5">{t.appAiBadge}</span>
             </span>
             <span className="text-[10px] text-slate-400 font-bengali -mt-1 hidden sm:inline">
-              বন্ধুর মনের ইচ্ছা ও ড্রিম কুইজ
+              {t.appSubtitle}
             </span>
           </div>
         </a>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-300 font-bengali">
-          <a href="#home" className="hover:text-pink-400 transition-colors">হোম</a>
-          <a href="#features" className="hover:text-pink-400 transition-colors">ফিচারসমূহ</a>
-          <a href="#how" className="hover:text-pink-400 transition-colors">কিভাবে কাজ করে</a>
+        <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-slate-300 font-bengali">
+          <a href="#home" className="hover:text-pink-400 transition-colors">{t.navHome}</a>
+          <a href="#features" className="hover:text-pink-400 transition-colors">{t.navFeatures}</a>
+          <a href="#how" className="hover:text-pink-400 transition-colors">{t.navHow}</a>
           <button
             onClick={onOpenOpenAiConfig}
             className="flex items-center gap-1.5 hover:text-emerald-300 transition-colors cursor-pointer text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300"
           >
             <Settings className="w-3.5 h-3.5" />
-            <span>OpenAI স্ট্যাটাস</span>
+            <span>{t.navOpenAiStatus}</span>
           </button>
         </nav>
 
-        {/* Desktop Action Buttons */}
-        <div className="hidden md:flex items-center gap-3">
+        {/* Desktop Action Buttons & Language Switcher */}
+        <div className="hidden md:flex items-center gap-2.5">
+          {/* Language Toggle */}
+          <div className="flex items-center bg-slate-900/90 border border-white/15 rounded-xl p-0.5 shadow-inner mr-1">
+            <button
+              type="button"
+              onClick={() => setLanguage('bn')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                language === 'bn'
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-sm shadow-pink-500/20'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="বাংলা ভাষায় ব্যবহার করুন"
+              aria-label="বাংলা নির্বাচন করুন"
+            >
+              <span>বাং</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setLanguage('en')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                language === 'en'
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-sm shadow-pink-500/20'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Switch to English"
+              aria-label="Select English language"
+            >
+              <span>EN</span>
+            </button>
+          </div>
+
           <button
             onClick={onOpenAiAnalysis}
-            className="px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 transition-all flex items-center gap-1.5 cursor-pointer font-bengali"
           >
             <Bot className="w-4 h-4 text-sky-400" />
-            <span>AI এনালাইসিস</span>
+            <span>{t.navAiAnalysis}</span>
           </button>
 
           <button
             onClick={onOpenWishBox}
-            className="px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 transition-all flex items-center gap-1.5 cursor-pointer font-bengali"
           >
             <Gift className="w-4 h-4 text-purple-400" />
-            <span>উইশ বক্স</span>
+            <span>{t.navWishBox}</span>
           </button>
 
           {currentUser ? (
@@ -86,8 +118,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
               <button
                 onClick={onLogout}
-                title="লগআউট"
-                aria-label="লগআউট করুন"
+                title={t.navLogout}
+                aria-label={t.navLogout}
                 className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-white/10 transition-all cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
@@ -99,7 +131,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-300 hover:text-white hover:bg-white/5 border border-white/10 transition-all flex items-center gap-1.5 cursor-pointer font-bengali"
             >
               <UserIcon className="w-4 h-4 text-slate-400" />
-              <span>লগইন</span>
+              <span>{t.navLogin}</span>
             </button>
           )}
 
@@ -108,21 +140,50 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 shadow-md shadow-pink-500/20 hover:shadow-pink-500/40 active:scale-95 transition-all flex items-center gap-2 cursor-pointer font-bengali"
           >
             <Heart className="w-4 h-4 fill-white animate-bounce" />
-            <span>কুইজ শুরু করুন</span>
+            <span>{t.navStartQuiz}</span>
           </button>
         </div>
 
-        {/* Mobile Hamburger Button */}
-        <div className="flex items-center gap-2 md:hidden">
+        {/* Mobile Header Controls */}
+        <div className="flex items-center gap-1.5 md:hidden">
+          {/* Mobile Quick Language Toggle */}
+          <div className="flex items-center bg-slate-900/90 border border-white/15 rounded-lg p-0.5 text-xs">
+            <button
+              type="button"
+              onClick={() => setLanguage('bn')}
+              className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all ${
+                language === 'bn'
+                  ? 'bg-pink-500 text-white'
+                  : 'text-slate-400'
+              }`}
+              aria-label="বাংলা"
+            >
+              বাং
+            </button>
+            <button
+              type="button"
+              onClick={() => setLanguage('en')}
+              className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all ${
+                language === 'en'
+                  ? 'bg-pink-500 text-white'
+                  : 'text-slate-400'
+              }`}
+              aria-label="English"
+            >
+              EN
+            </button>
+          </div>
+
           <button
             onClick={onStartQuiz}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-purple-600 font-bengali"
+            className="px-2.5 py-1.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-purple-600 font-bengali"
           >
-            কুইজ শুরু
+            {language === 'bn' ? 'কুইজ' : 'Quiz'}
           </button>
+
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="মেনু খুলুন"
+            aria-label={t.navMenuOpen}
             className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -133,27 +194,59 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden px-4 pt-3 pb-6 bg-[#0c1233] border-b border-white/10 space-y-3 font-bengali animate-in slide-in-from-top-2 duration-200">
+          {/* Mobile Language Switcher Row */}
+          <div className="flex items-center justify-between py-2 border-b border-white/10 text-xs">
+            <span className="text-slate-300 flex items-center gap-1.5 font-medium">
+              <Languages className="w-4 h-4 text-pink-400" />
+              <span>{language === 'bn' ? 'ভাষা নির্বাচন করুন' : 'Select Language'}</span>
+            </span>
+            <div className="flex items-center bg-white/5 border border-white/10 rounded-lg p-0.5 text-xs">
+              <button
+                type="button"
+                onClick={() => setLanguage('bn')}
+                className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
+                  language === 'bn'
+                    ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                বাংলা
+              </button>
+              <button
+                type="button"
+                onClick={() => setLanguage('en')}
+                className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
+                  language === 'en'
+                    ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                English
+              </button>
+            </div>
+          </div>
+
           <div className="flex flex-col space-y-2 text-sm text-slate-300 pb-3 border-b border-white/10">
             <a
               href="#home"
               onClick={() => setMobileMenuOpen(false)}
               className="py-1.5 hover:text-pink-400"
             >
-              হোম
+              {t.navHome}
             </a>
             <a
               href="#features"
               onClick={() => setMobileMenuOpen(false)}
               className="py-1.5 hover:text-pink-400"
             >
-              ফিচারসমূহ
+              {t.navFeatures}
             </a>
             <a
               href="#how"
               onClick={() => setMobileMenuOpen(false)}
               className="py-1.5 hover:text-pink-400"
             >
-              কিভাবে কাজ করে
+              {t.navHow}
             </a>
             <button
               onClick={() => {
@@ -163,7 +256,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="text-left py-1.5 text-emerald-400 hover:text-emerald-300 flex items-center gap-2"
             >
               <Settings className="w-4 h-4" />
-              <span>OpenAI ChatGPT কনফিগারেশন</span>
+              <span>{t.navOpenAiConfig}</span>
             </button>
           </div>
 
@@ -176,7 +269,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="py-2.5 px-3 rounded-xl text-xs font-semibold text-sky-300 bg-sky-500/10 border border-sky-500/30 flex items-center justify-center gap-1.5"
             >
               <Bot className="w-4 h-4 text-sky-400" />
-              <span>AI এনালাইসিস</span>
+              <span>{t.navAiAnalysis}</span>
             </button>
             <button
               onClick={() => {
@@ -186,7 +279,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="py-2.5 px-3 rounded-xl text-xs font-semibold text-purple-300 bg-purple-500/10 border border-purple-500/30 flex items-center justify-center gap-1.5"
             >
               <Gift className="w-4 h-4 text-purple-400" />
-              <span>উইশ বক্স</span>
+              <span>{t.navWishBox}</span>
             </button>
           </div>
 
@@ -200,7 +293,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="text-xs text-white font-medium flex items-center gap-2"
               >
                 <UserIcon className="w-4 h-4 text-pink-400" />
-                <span>ড্যাশবোর্ড ({currentUser.name})</span>
+                <span>{t.navDashboard} ({currentUser.name})</span>
               </button>
               <button
                 onClick={() => {
@@ -210,7 +303,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="text-xs text-rose-400 hover:underline flex items-center gap-1"
               >
                 <LogOut className="w-3.5 h-3.5" />
-                <span>লগআউট</span>
+                <span>{t.navLogout}</span>
               </button>
             </div>
           ) : (
@@ -222,7 +315,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="w-full py-2.5 rounded-xl text-xs font-semibold text-slate-200 bg-white/5 border border-white/10 flex items-center justify-center gap-1.5"
             >
               <UserIcon className="w-4 h-4" />
-              <span>লগইন / রেজিস্টার</span>
+              <span>{t.navLoginRegister}</span>
             </button>
           )}
         </div>
@@ -230,3 +323,4 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
+

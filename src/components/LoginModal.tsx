@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Lock, Mail, User as UserIcon, LogIn, UserPlus, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { api } from '../services/apiClient';
 import { User } from '../types/backend';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface LoginModalProps {
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const { language, t } = useLanguage();
   const [isRegister, setIsRegister] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -102,12 +104,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
               <Lock className="w-4 h-4" />
             </div>
             <h2 id="auth-modal-title" className="font-bold text-sm sm:text-base text-white">
-              {isRegister ? 'নতুন অ্যাকাউন্ট তৈরি করুন' : 'নিরাপদ লগইন'}
+              {isRegister
+                ? (language === 'bn' ? 'নতুন অ্যাকাউন্ট তৈরি করুন' : 'Create New Account')
+                : (language === 'bn' ? 'নিরাপদ লগইন' : 'Secure Login')}
             </h2>
           </div>
           <button
             onClick={onClose}
-            aria-label="বন্ধ করুন"
+            aria-label={t.close}
             className="w-8 h-8 rounded-full text-slate-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -128,7 +132,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
                 !isRegister ? 'bg-pink-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'
               }`}
             >
-              লগইন
+              {t.navLogin}
             </button>
             <button
               type="button"
@@ -140,7 +144,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
                 isRegister ? 'bg-pink-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'
               }`}
             >
-              রেজিস্ট্রেশন
+              {language === 'bn' ? 'রেজিস্ট্রেশন' : 'Register'}
             </button>
           </div>
 
@@ -148,14 +152,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
             {isRegister && (
               <div className="space-y-1">
                 <label className="block text-xs font-semibold text-slate-300">
-                  আপনার নাম <span className="text-pink-400">*</span>
+                  {language === 'bn' ? 'আপনার নাম' : 'Your Name'} <span className="text-pink-400">*</span>
                 </label>
                 <div className="relative">
                   <UserIcon className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
                   <input
                     type="text"
                     required
-                    placeholder="যেমন: তানভীর আহমেদ"
+                    placeholder={language === 'bn' ? 'যেমন: তানভীর আহমেদ' : 'e.g., Alex Johnson'}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#080d26] border border-white/15 focus:border-pink-400 focus:outline-none text-xs text-white"
@@ -166,7 +170,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
 
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-slate-300">
-                ইমেইল এড্রেস <span className="text-pink-400">*</span>
+                {language === 'bn' ? 'ইমেইল এড্রেস' : 'Email Address'} <span className="text-pink-400">*</span>
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
@@ -183,7 +187,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
 
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-slate-300">
-                পাসওয়ার্ড <span className="text-pink-400">*</span> (কমপক্ষে ৮ অক্ষর)
+                {language === 'bn' ? 'পাসওয়ার্ড' : 'Password'} <span className="text-pink-400">*</span> {language === 'bn' ? '(কমপক্ষে ৮ অক্ষর)' : '(min 8 characters)'}
               </label>
               <div className="relative">
                 <Lock className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
@@ -218,16 +222,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
               className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:brightness-110 active:scale-95 disabled:opacity-60 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
             >
               {isSubmitting ? (
-                <span>যাচাই করা হচ্ছে...</span>
+                <span>{language === 'bn' ? 'যাচাই করা হচ্ছে...' : 'Verifying...'}</span>
               ) : isRegister ? (
                 <>
                   <UserPlus className="w-4 h-4" />
-                  <span>অ্যাকাউন্ট তৈরি করুন</span>
+                  <span>{language === 'bn' ? 'অ্যাকাউন্ট তৈরি করুন' : 'Create Account'}</span>
                 </>
               ) : (
                 <>
                   <LogIn className="w-4 h-4" />
-                  <span>লগইন করুন</span>
+                  <span>{language === 'bn' ? 'লগইন করুন' : 'Sign In'}</span>
                 </>
               )}
             </button>
@@ -235,7 +239,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
 
           {/* Development note */}
           <p className="text-[10px] text-slate-400 text-center leading-relaxed pt-2 border-t border-white/10">
-            🔒 পাসওয়ার্ডগুলি Node Scrypt দিয়ে এনক্রিপ্ট ও হ্যাস করে সংরক্ষিত হয়। কখনোই প্লেইন টেক্সট হিসেবে রাখা হয় না।
+            {language === 'bn'
+              ? '🔒 পাসওয়ার্ডগুলি Node Scrypt দিয়ে এনক্রিপ্ট ও হ্যাস করে সংরক্ষিত হয়। কখনোই প্লেইন টেক্সট হিসেবে রাখা হয় না।'
+              : '🔒 Passwords are encrypted & salted using Node Scrypt. Never stored in plain text.'}
           </p>
         </div>
       </div>

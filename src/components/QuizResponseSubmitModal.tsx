@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Sparkles, Check, CheckCircle2, AlertCircle, Heart, Lock, ArrowRight } from 'lucide-react';
 import { api } from '../services/apiClient';
 import { Quiz } from '../types/backend';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface QuizResponseSubmitModalProps {
   shareToken: string | null;
@@ -14,6 +15,7 @@ export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = (
   onClose,
   onOpenMyQuiz,
 }) => {
+  const { language, t } = useLanguage();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [respondentName, setRespondentName] = useState('');
   const [consentGiven, setConsentGiven] = useState(true);
@@ -34,14 +36,18 @@ export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = (
         const data = await api.getQuizByShareToken(shareToken);
         setQuiz(data);
       } catch (err: unknown) {
-        setErrorMessage(err instanceof Error ? err.message : 'কুইজ তথ্য লোড করা যায়নি।');
+        setErrorMessage(
+          err instanceof Error
+            ? err.message
+            : (language === 'bn' ? 'কুইজ তথ্য লোড করা যায়নি।' : 'Unable to load quiz details.')
+        );
       } finally {
         setIsLoading(false);
       }
     };
 
     loadQuiz();
-  }, [shareToken]);
+  }, [shareToken, language]);
 
   useEffect(() => {
     if (!shareToken) return;
@@ -73,18 +79,24 @@ export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = (
     if (!quiz) return;
 
     if (!respondentName.trim() || respondentName.trim().length < 2) {
-      setErrorMessage('অনুগ্রহ করে আপনার নাম লিখুন।');
+      setErrorMessage(
+        language === 'bn' ? 'অনুগ্রহ করে আপনার নাম লিখুন।' : 'Please enter your name.'
+      );
       return;
     }
 
     if (!consentGiven) {
-      setErrorMessage('বন্ধুর সাথে উত্তর শেয়ারের সম্মতি প্রদান আবশ্যক।');
+      setErrorMessage(
+        language === 'bn' ? 'বন্ধুর সাথে উত্তর শেয়ারের সম্মতি প্রদান আবশ্যক।' : 'Consent to share answers with your friend is required.'
+      );
       return;
     }
 
     const answerKeys = Object.keys(selectedAnswers);
     if (answerKeys.length === 0) {
-      setErrorMessage('কমপক্ষে ১টি প্রশ্নের উত্তর নির্বাচন করুন।');
+      setErrorMessage(
+        language === 'bn' ? 'কমপক্ষে ১টি প্রশ্নের উত্তর নির্বাচন করুন।' : 'Please answer at least 1 question.'
+      );
       return;
     }
 
@@ -110,7 +122,11 @@ export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = (
 
       setIsSuccess(true);
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : 'উত্তর জমা দিতে সমস্যা হয়েছে।');
+      setErrorMessage(
+        err instanceof Error
+          ? err.message
+          : (language === 'bn' ? 'উত্তর জমা দিতে সমস্যা হয়েছে।' : 'Error submitting response.')
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -133,16 +149,20 @@ export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = (
             </div>
             <div>
               <h2 id="quiz-response-modal-title" className="font-bold text-sm sm:text-base text-white">
-                {quiz ? `${quiz.creatorName}-এর ফ্রেন্ডশিপ কুইজ` : 'ফ্রেন্ডশিপ কুইজ আমন্ত্রণ'}
+                {quiz
+                  ? (language === 'bn' ? `${quiz.creatorName}-এর ফ্রেন্ডশিপ কুইজ` : `${quiz.creatorName}’s Friendship Quiz`)
+                  : (language === 'bn' ? 'ফ্রেন্ডশিপ কুইজ আমন্ত্রণ' : 'Friendship Quiz Invitation')}
               </h2>
               <p className="text-[11px] text-pink-300/80">
-                স্বেচ্ছায় আপনার পছন্দের উত্তর জানিয়ে বন্ধুকে চমকে দিন
+                {language === 'bn'
+                  ? 'স্বেচ্ছায় আপনার পছন্দের উত্তর জানিয়ে বন্ধুকে চমকে দিন'
+                  : 'Share your genuine preferences and surprise your friend'}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            aria-label="বন্ধ করুন"
+            aria-label={t.close}
             className="w-8 h-8 rounded-full text-slate-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -152,7 +172,9 @@ export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = (
         {/* Modal Body */}
         <div className="p-5 sm:p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
           {isLoading ? (
-            <p className="text-xs text-slate-400 text-center py-8">কুইজ তথ্য লোড হচ্ছে...</p>
+            <p className="text-xs text-slate-400 text-center py-8">
+              {language === 'bn' ? 'কুইজ তথ্য লোড হচ্ছে...' : 'Loading quiz information...'}
+            </p>
           ) : errorMessage && !quiz ? (
             <div className="p-4 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-200 text-xs text-center space-y-2">
               <AlertCircle className="w-6 h-6 text-rose-400 mx-auto" />
@@ -165,9 +187,13 @@ export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = (
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <div className="space-y-1.5">
-                <h3 className="font-bold text-base text-white">ধন্যবাদ, {respondentName}!</h3>
+                <h3 className="font-bold text-base text-white">
+                  {language === 'bn' ? `ধন্যবাদ, ${respondentName}!` : `Thank you, ${respondentName}!`}
+                </h3>
                 <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
-                  আপনার উত্তরটি সফলভাবে আপনার বন্ধু {quiz?.creatorName}-এর কাছে পৌঁছে দেওয়া হয়েছে!
+                  {language === 'bn'
+                    ? `আপনার উত্তরটি সফলভাবে আপনার বন্ধু ${quiz?.creatorName}-এর কাছে পৌঁছে দেওয়া হয়েছে!`
+                    : `Your responses have been successfully delivered to your friend ${quiz?.creatorName}!`}
                 </p>
               </div>
 
@@ -177,7 +203,7 @@ export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = (
                   onClick={onClose}
                   className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-xs cursor-pointer transition-colors"
                 >
-                  বন্ধ করুন
+                  {t.close}
                 </button>
                 <button
                   type="button"
@@ -187,7 +213,7 @@ export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = (
                   }}
                   className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold text-xs shadow-md cursor-pointer hover:brightness-110"
                 >
-                  নিজের জন্যও কুইজ তৈরি করুন
+                  {language === 'bn' ? 'নিজের জন্যও কুইজ তৈরি করুন' : 'Create a Quiz for Yourself'}
                 </button>
               </div>
             </div>
@@ -195,7 +221,9 @@ export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = (
             <form onSubmit={handleSubmit} className="space-y-5">
               {quiz.description && (
                 <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 text-xs text-slate-300">
-                  <span className="font-bold text-pink-300 block mb-0.5">{quiz.creatorName}-এর বার্তা:</span>
+                  <span className="font-bold text-pink-300 block mb-0.5">
+                    {language === 'bn' ? `${quiz.creatorName}-এর বার্তা:` : `Message from ${quiz.creatorName}:`}
+                  </span>
                   <p>{quiz.description}</p>
                 </div>
               )}
@@ -203,12 +231,12 @@ export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = (
               {/* Respondent Name Field */}
               <div className="space-y-1">
                 <label className="block text-xs font-semibold text-pink-300">
-                  আপনার নাম বা ডাকনাম <span className="text-rose-400">*</span>
+                  {language === 'bn' ? 'আপনার নাম বা ডাকনাম' : 'Your Name or Nickname'} <span className="text-rose-400">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="যেমন: সাদিয়া, রাফসান..."
+                  placeholder={language === 'bn' ? 'যেমন: সাদিয়া, রাফসান...' : 'e.g., Alex, Jordan...'}
                   value={respondentName}
                   onChange={(e) => setRespondentName(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-[#080d26] border border-white/15 focus:border-pink-400 focus:outline-none text-xs text-white"
@@ -218,7 +246,7 @@ export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = (
               {/* Questions */}
               <div className="space-y-4 pt-1">
                 <span className="text-xs font-bold text-slate-200 block">
-                  প্রশ্নগুলোর উত্তর নির্বাচন করুন:
+                  {language === 'bn' ? 'প্রশ্নগুলোর উত্তর নির্বাচন করুন:' : 'Choose your preferred answers:'}
                 </span>
 
                 <div className="space-y-3.5">
@@ -226,7 +254,7 @@ export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = (
                     <div key={q.id} className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 space-y-2.5">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-sky-300">
                         <span>{q.categoryIcon || '✨'}</span>
-                        <span>প্রশ্ন #{idx + 1}: {q.question}</span>
+                        <span>{language === 'bn' ? `প্রশ্ন #${idx + 1}: ${q.question}` : `Question #${idx + 1}: ${q.question}`}</span>
                       </div>
 
                       <div className="space-y-1.5">
@@ -261,11 +289,15 @@ export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = (
               {/* Voluntary Note */}
               <div className="space-y-1">
                 <label className="block text-xs font-semibold text-slate-300">
-                  বন্ধুর উদ্দেশ্যে কোনো চিরকুট বা মনের কথা (ঐচ্ছিক):
+                  {language === 'bn' ? 'বন্ধুর উদ্দেশ্যে কোনো চিরকুট বা মনের কথা (ঐচ্ছিক):' : 'A sweet note or message to your friend (Optional):'}
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="যেমন: তোর জন্মদিনের সারপ্রাইজ উপহার কিন্তু সেরা হতে হবে..."
+                  placeholder={
+                    language === 'bn'
+                      ? 'যেমন: তোর জন্মদিনের সারপ্রাইজ উপহার কিন্তু সেরা হতে হবে...'
+                      : 'e.g., Can’t wait for our next trip! Keep this wish list handy...'
+                  }
                   value={voluntaryNote}
                   onChange={(e) => setVoluntaryNote(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-[#080d26] border border-white/15 focus:border-pink-400 focus:outline-none text-xs text-white placeholder-slate-500 resize-none"
@@ -281,7 +313,9 @@ export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = (
                   className="mt-0.5 rounded text-pink-500 focus:ring-0"
                 />
                 <span className="leading-relaxed">
-                  আমি সচেতনভাবে ও স্বেচ্ছায় এই উত্তরগুলো আমার বন্ধু {quiz.creatorName}-এর সাথে শেয়ার করতে সম্মতি প্রদান করছি।
+                  {language === 'bn'
+                    ? `আমি সচেতনভাবে ও স্বেচ্ছায় এই উত্তরগুলো আমার বন্ধু ${quiz.creatorName}-এর সাথে শেয়ার করতে সম্মতি প্রদান করছি।`
+                    : `I voluntarily and consciously consent to share these preference answers with my friend ${quiz.creatorName}.`}
                 </span>
               </label>
 
@@ -296,7 +330,11 @@ export const QuizResponseSubmitModal: React.FC<QuizResponseSubmitModalProps> = (
                 disabled={isSubmitting}
                 className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:brightness-110 active:scale-95 disabled:opacity-50 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>{isSubmitting ? 'জমা দেওয়া হচ্ছে...' : 'উত্তর সাবমিট করুন'}</span>
+                <span>
+                  {isSubmitting
+                    ? (language === 'bn' ? 'জমা দেওয়া হচ্ছে...' : 'Submitting...')
+                    : (language === 'bn' ? 'উত্তর সাবমিট করুন' : 'Submit Answers')}
+                </span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>

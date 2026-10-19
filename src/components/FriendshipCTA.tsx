@@ -1,6 +1,7 @@
 import React from 'react';
-import { Heart, Sparkles, ArrowRight, Gift } from 'lucide-react';
+import { Heart, ArrowRight, Gift } from 'lucide-react';
 import { RevealOnScroll } from './RevealOnScroll';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface FriendshipCTAProps {
   onStartQuiz: () => void;
@@ -11,6 +12,8 @@ export const FriendshipCTA: React.FC<FriendshipCTAProps> = ({
   onStartQuiz,
   onOpenWishBox,
 }) => {
+  const { t } = useLanguage();
+
   return (
     <section className="py-16 sm:py-24 relative overflow-hidden bg-gradient-to-b from-[#080c1e] via-[#101438] to-[#080c1e]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
@@ -21,11 +24,11 @@ export const FriendshipCTA: React.FC<FriendshipCTAProps> = ({
             </div>
 
             <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight font-bengali max-w-2xl mx-auto leading-snug">
-              আজই আপনার প্রিয় বন্ধুকে জানান সে আপনার জীবনে কতটা বিশেষ!
+              {t.ctaTitle}
             </h2>
 
             <p className="mt-4 text-xs sm:text-base text-slate-300 font-bengali max-w-xl mx-auto leading-relaxed">
-              একটি সুন্দর কুইজ বা ছোট্ট একটি চিরকুট হয়তো আপনাদের বন্ধুত্বের সবচেয়ে আনন্দদায়ক স্মৃতির সূচনা করবে।
+              {t.ctaSubtitle}
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-sm mx-auto">
@@ -33,7 +36,7 @@ export const FriendshipCTA: React.FC<FriendshipCTAProps> = ({
                 onClick={onStartQuiz}
                 className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:brightness-110 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-lg shadow-pink-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer font-bengali"
               >
-                <span>কুইজ শুরু করুন</span>
+                <span>{t.ctaStartQuiz}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
@@ -42,7 +45,7 @@ export const FriendshipCTA: React.FC<FriendshipCTAProps> = ({
                 className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/15 active:scale-95 text-slate-200 hover:text-white border border-white/15 font-semibold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer font-bengali"
               >
                 <Gift className="w-4 h-4 text-purple-300" />
-                <span>সিক্রেট উইশ বক্স</span>
+                <span>{t.ctaWishBox}</span>
               </button>
             </div>
           </div>
@@ -51,3 +54,4 @@ export const FriendshipCTA: React.FC<FriendshipCTAProps> = ({
     </section>
   );
 };
+

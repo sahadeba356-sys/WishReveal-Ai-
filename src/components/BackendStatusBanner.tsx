@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Database, ShieldCheck, ChevronRight, X, Server, Lock, Bot, Key } from 'lucide-react';
 import { api } from '../services/apiClient';
 import { BackendStatus } from '../types/backend';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface BackendStatusBannerProps {
   onOpenPrivacy: () => void;
@@ -15,6 +16,7 @@ export const BackendStatusBanner: React.FC<BackendStatusBannerProps> = ({
   const [status, setStatus] = useState<BackendStatus | null>(null);
   const [isDismissed, setIsDismissed] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const { language, t } = useLanguage();
 
   useEffect(() => {
     api.getBackendStatus()
@@ -30,16 +32,22 @@ export const BackendStatusBanner: React.FC<BackendStatusBannerProps> = ({
         <div className="flex items-center gap-2 min-w-0">
           <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-400/30 text-indigo-300 font-bold shrink-0">
             <Server className="w-3 h-3 text-indigo-400" />
-            <span>সিকিউর ব্যাকএন্ড রেডি</span>
+            <span>{t.backendReady}</span>
           </span>
 
           <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 font-bold shrink-0">
             <Bot className="w-3 h-3 text-emerald-400" />
-            <span>{status.hasOpenAiKey ? `OpenAI (${status.openAiModel || 'gpt-4o-mini'})` : 'OpenAI রেডি (ডেমো মোড)'}</span>
+            <span>
+              {status.hasOpenAiKey
+                ? `OpenAI (${status.openAiModel || 'gpt-4o-mini'})`
+                : language === 'bn' ? 'OpenAI রেডি (ডেমো মোড)' : 'OpenAI Ready (Demo Mode)'}
+            </span>
           </span>
 
           <p className="truncate text-slate-300 hidden md:inline">
-            পাসওয়ার্ড হ্যাসড ও RBAC সিকিউরড | সার্ভার-সাইড OpenAI প্রক্সি সক্রিয়
+            {language === 'bn'
+              ? 'পাসওয়ার্ড হ্যাসড ও RBAC সিকিউরড | সার্ভার-সাইড OpenAI প্রক্সি সক্রিয়'
+              : 'Password Hashed & RBAC Secured | Server-Side OpenAI Proxy Active'}
           </p>
         </div>
 
@@ -50,7 +58,7 @@ export const BackendStatusBanner: React.FC<BackendStatusBannerProps> = ({
             className="text-emerald-300 hover:text-emerald-100 underline cursor-pointer flex items-center gap-0.5"
           >
             <Key className="w-3 h-3" />
-            <span>API কী সেটআপ</span>
+            <span>{t.backendApiKeySetup}</span>
           </button>
           <span className="text-white/20">|</span>
           <button
@@ -58,7 +66,9 @@ export const BackendStatusBanner: React.FC<BackendStatusBannerProps> = ({
             onClick={() => setShowDetails(!showDetails)}
             className="text-indigo-400 hover:text-indigo-200 underline cursor-pointer"
           >
-            {showDetails ? 'লুকান' : 'নিরাপত্তা বিবরণ'}
+            {showDetails
+              ? (language === 'bn' ? 'লুকান' : 'Hide')
+              : (language === 'bn' ? 'নিরাপত্তা বিবরণ' : 'Security Details')}
           </button>
           <span className="text-white/20">|</span>
           <button
@@ -66,13 +76,13 @@ export const BackendStatusBanner: React.FC<BackendStatusBannerProps> = ({
             onClick={onOpenPrivacy}
             className="text-pink-400 hover:text-pink-300 underline cursor-pointer flex items-center gap-0.5"
           >
-            <span>গোপনীয়তা</span>
+            <span>{language === 'bn' ? 'গোপনীয়তা' : 'Privacy'}</span>
             <ChevronRight className="w-3 h-3" />
           </button>
           <button
             type="button"
             onClick={() => setIsDismissed(true)}
-            aria-label="ব্যানার বন্ধ করুন"
+            aria-label={language === 'bn' ? 'ব্যানার বন্ধ করুন' : 'Dismiss banner'}
             className="p-1 rounded-md text-slate-400 hover:text-white cursor-pointer ml-1"
           >
             <X className="w-3.5 h-3.5" />
@@ -84,23 +94,23 @@ export const BackendStatusBanner: React.FC<BackendStatusBannerProps> = ({
         <div className="max-w-7xl mx-auto mt-2 p-3 rounded-xl bg-black/40 border border-white/10 text-xs text-slate-300 space-y-1.5 animate-in fade-in duration-150">
           <div className="flex items-center gap-2 text-indigo-300 font-bold">
             <Lock className="w-3.5 h-3.5 text-indigo-400" />
-            <span>নিরাপত্তা ও ডেটাবেস অবস্থা:</span>
+            <span>{language === 'bn' ? 'নিরাপত্তা ও ডেটাবেস অবস্থা:' : 'Security & Database Architecture:'}</span>
           </div>
           <p className="text-[11px] text-slate-300 leading-relaxed">
             {status.message}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-[11px]">
             <div className="p-2 rounded bg-white/5 border border-white/5">
-              <span className="text-slate-400 block">পাসওয়ার্ড স্টোরেজ:</span>
-              <span className="text-emerald-400 font-semibold">Node Crypto Scrypt + Salt (হ্যাসড)</span>
+              <span className="text-slate-400 block">{language === 'bn' ? 'পাসওয়ার্ড স্টোরেজ:' : 'Password Storage:'}</span>
+              <span className="text-emerald-400 font-semibold">Node Crypto Scrypt + Salt</span>
             </div>
             <div className="p-2 rounded bg-white/5 border border-white/5">
-              <span className="text-slate-400 block">কুইজ ও ইচ্ছা এক্সেস:</span>
-              <span className="text-indigo-300 font-semibold">Private By Default (RBAC অথরাইজেশন)</span>
+              <span className="text-slate-400 block">{language === 'bn' ? 'কুইজ ও ইচ্ছা এক্সেস:' : 'Quiz & Wish Access:'}</span>
+              <span className="text-indigo-300 font-semibold">{language === 'bn' ? 'Private By Default (RBAC অথরাইজেশন)' : 'Private By Default (RBAC Authorization)'}</span>
             </div>
             <div className="p-2 rounded bg-white/5 border border-white/5">
-              <span className="text-slate-400 block">OpenAI Key নিরাপত্তা:</span>
-              <span className="text-emerald-300 font-semibold">সার্ভার-সাইড প্রক্সি (ব্রাউজারে গোপন রাখা)</span>
+              <span className="text-slate-400 block">{language === 'bn' ? 'OpenAI Key নিরাপত্তা:' : 'OpenAI Key Security:'}</span>
+              <span className="text-emerald-300 font-semibold">{language === 'bn' ? 'সার্ভার-সাইড প্রক্সি (ব্রাউজারে গোপন)' : 'Server-side Proxy (Hidden from browser)'}</span>
             </div>
           </div>
         </div>
@@ -108,3 +118,4 @@ export const BackendStatusBanner: React.FC<BackendStatusBannerProps> = ({
     </div>
   );
 };
+

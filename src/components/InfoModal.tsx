@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { X, Shield, FileText } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface InfoModalProps {
   type: 'privacy' | 'terms' | null;
@@ -7,6 +8,8 @@ interface InfoModalProps {
 }
 
 export const InfoModal: React.FC<InfoModalProps> = ({ type, onClose }) => {
+  const { language, t } = useLanguage();
+
   useEffect(() => {
     if (!type) return;
     const originalOverflow = document.body.style.overflow;
@@ -40,12 +43,14 @@ export const InfoModal: React.FC<InfoModalProps> = ({ type, onClose }) => {
               {type === 'privacy' ? <Shield className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
             </div>
             <h2 id="info-modal-title" className="font-bold text-sm sm:text-base text-white">
-              {type === 'privacy' ? 'গোপনীয়তা নীতি (Privacy Policy)' : 'ব্যবহারের শর্তাবলী (Terms of Service)'}
+              {type === 'privacy'
+                ? (language === 'bn' ? 'গোপনীয়তা নীতি (Privacy Policy)' : 'Privacy Policy')
+                : (language === 'bn' ? 'ব্যবহারের শর্তাবলী (Terms of Service)' : 'Terms of Service')}
             </h2>
           </div>
           <button
             onClick={onClose}
-            aria-label="বন্ধ করুন"
+            aria-label={t.close}
             className="w-8 h-8 rounded-full text-slate-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -55,37 +60,73 @@ export const InfoModal: React.FC<InfoModalProps> = ({ type, onClose }) => {
         {/* Body */}
         <div className="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1 custom-scrollbar text-xs leading-relaxed text-slate-300">
           {type === 'privacy' ? (
-            <>
-              <p>
-                WishReveal Ai-এ আমরা আপনার গোপনীয়তাকে সর্বোচ্চ অগ্রাধিকার প্রদান করি। এই প্ল্যাটফর্মটি বন্ধুদের মধ্যে ভালোবাসাপূর্ণ উপহার ও ইচ্ছার আদান-প্রদানকে সহজ ও আনন্দদায়ক করতে তৈরি করা হয়েছে।
-              </p>
-              <h3 className="font-bold text-sm text-pink-300 pt-2">১. আমরা কী তথ্য সংগ্রহ করি?</h3>
-              <p>
-                আমরা কেবল সেই তথ্য সংগ্রহ করি যা আপনি বা আপনার বন্ধু স্বেচ্ছায় কুইজ বা উইশ বক্সে ইনপুট দেন (যেমন: পছন্দের ভ্রমণ স্থান, শখ, উপহারের ধরন ইত্যাদি)।
-              </p>
-              <h3 className="font-bold text-sm text-pink-300 pt-2">২. OpenAI ChatGPT ব্যবহারের স্বচ্ছতা</h3>
-              <p>
-                শেয়ার করা উত্তরের ভিত্তিতে উপহার আইডিয়া তৈরি করতে আমরা অফিসিয়াল OpenAI ChatGPT API ব্যবহার করি। আপনার কোনো ব্যক্তিগত সংবেদনশীল তথ্য বা পাসওয়ার্ড কোনো তৃতীয় পক্ষের সাথে ভাগ করা হয় না।
-              </p>
-              <h3 className="font-bold text-sm text-pink-300 pt-2">৩. পাসওয়ার্ড ও নিরাপত্তা</h3>
-              <p>
-                ব্যবহারকারীর পাসওয়ার্ডগুলি Node Scrypt ক্রিপ্টোগ্রাফিক অ্যালগরিদম ও ইউনিক সল্ট দিয়ে হ্যাশ করে সার্ভারে সংরক্ষিত থাকে।
-              </p>
-            </>
+            language === 'bn' ? (
+              <>
+                <p>
+                  WishReveal Ai-এ আমরা আপনার গোপনীয়তাকে সর্বোচ্চ অগ্রাধিকার প্রদান করি। এই প্ল্যাটফর্মটি বন্ধুদের মধ্যে ভালোবাসাপূর্ণ উপহার ও ইচ্ছার আদান-প্রদানকে সহজ ও আনন্দদায়ক করতে তৈরি করা হয়েছে।
+                </p>
+                <h3 className="font-bold text-sm text-pink-300 pt-2">১. আমরা কী তথ্য সংগ্রহ করি?</h3>
+                <p>
+                  আমরা কেবল সেই তথ্য সংগ্রহ করি যা আপনি বা আপনার বন্ধু স্বেচ্ছায় কুইজ বা উইশ বক্সে ইনপুট দেন (যেমন: পছন্দের ভ্রমণ স্থান, শখ, উপহারের ধরন ইত্যাদি)।
+                </p>
+                <h3 className="font-bold text-sm text-pink-300 pt-2">২. OpenAI ChatGPT ব্যবহারের স্বচ্ছতা</h3>
+                <p>
+                  শেয়ার করা উত্তরের ভিত্তিতে উপহার আইডিয়া তৈরি করতে আমরা অফিসিয়াল OpenAI ChatGPT API ব্যবহার করি। আপনার কোনো ব্যক্তিগত সংবেদনশীল তথ্য বা পাসওয়ার্ড কোনো তৃতীয় পক্ষের সাথে ভাগ করা হয় না।
+                </p>
+                <h3 className="font-bold text-sm text-pink-300 pt-2">৩. পাসওয়ার্ড ও নিরাপত্তা</h3>
+                <p>
+                  ব্যবহারকারীর পাসওয়ার্ডগুলি Node Scrypt ক্রিপ্টোগ্রাফিক অ্যালগরিদম ও ইউনিক সল্ট দিয়ে হ্যাশ করে সার্ভারে সংরক্ষিত থাকে।
+                </p>
+              </>
+            ) : (
+              <>
+                <p>
+                  At WishReveal Ai, we hold your privacy in highest regard. This application is designed to make thoughtful gift giving and understanding friends’ preferences enjoyable, authentic, and safe.
+                </p>
+                <h3 className="font-bold text-sm text-pink-300 pt-2">1. What Information Do We Collect?</h3>
+                <p>
+                  We only process information that you or your friends voluntarily share through quizzes or secret wish entries (such as travel preferences, favorite leisure styles, and comfort foods).
+                </p>
+                <h3 className="font-bold text-sm text-pink-300 pt-2">2. OpenAI ChatGPT Transparency</h3>
+                <p>
+                  We utilize the official OpenAI API to analyze voluntary quiz responses into thoughtful gift recommendations. No sensitive account passwords or private credentials are ever transmitted to third parties.
+                </p>
+                <h3 className="font-bold text-sm text-pink-300 pt-2">3. Password Encryption & Security</h3>
+                <p>
+                  User credentials are encrypted using cryptographic Node Scrypt algorithms with unique salt hashes. Raw passwords are never stored or exposed in client bundles.
+                </p>
+              </>
+            )
           ) : (
-            <>
-              <p>
-                WishReveal Ai প্ল্যাটফর্মটি ব্যবহারের মাধ্যমে আপনি নিচের শর্তাবলীতে সম্মত হচ্ছেন:
-              </p>
-              <h3 className="font-bold text-sm text-pink-300 pt-2">১. বন্ধুসুলভ বিনোদনমূলক ব্যবহার</h3>
-              <p>
-                এই প্ল্যাটফর্মের সমস্ত কুইজ, ফলাফল ও AI বিশ্লেষণ শুধুমাত্র পারস্পরিক সৌহার্দ্য ও উপহারের ধারণার জন্য তৈরি। এটি কোনো অবচেতন বা মনস্তাত্ত্বিক দাবি নয়।
-              </p>
-              <h3 className="font-bold text-sm text-pink-300 pt-2">২. অপব্যবহার নিষিদ্ধ</h3>
-              <p>
-                অন্য কারো নাম বা তথ্য বিকৃত করে অসৎ উদ্দেশ্যে কুইজ তৈরি বা অনুপযুক্ত তথ্য প্রেরণ কঠোরভাবে নিষিদ্ধ।
-              </p>
-            </>
+            language === 'bn' ? (
+              <>
+                <p>
+                  WishReveal Ai প্ল্যাটফর্মটি ব্যবহারের মাধ্যমে আপনি নিচের শর্তাবলীতে সম্মত হচ্ছেন:
+                </p>
+                <h3 className="font-bold text-sm text-pink-300 pt-2">১. বন্ধুসুলভ বিনোদনমূলক ব্যবহার</h3>
+                <p>
+                  এই প্ল্যাটফর্মের সমস্ত কুইজ, ফলাফল ও AI বিশ্লেষণ শুধুমাত্র পারস্পরিক সৌহার্দ্য ও উপহারের ধারণার জন্য তৈরি। এটি কোনো অবচেতন বা মনস্তাত্ত্বিক দাবি নয়।
+                </p>
+                <h3 className="font-bold text-sm text-pink-300 pt-2">২. অপব্যবহার নিষিদ্ধ</h3>
+                <p>
+                  অন্য কারো নাম বা তথ্য বিকৃত করে অসৎ উদ্দেশ্যে কুইজ তৈরি বা অনুপযুক্ত তথ্য প্রেরণ কঠোরভাবে নিষিদ্ধ।
+                </p>
+              </>
+            ) : (
+              <>
+                <p>
+                  By accessing and using WishReveal Ai, you agree to the following terms and community principles:
+                </p>
+                <h3 className="font-bold text-sm text-pink-300 pt-2">1. Friendly & Delightful Purpose</h3>
+                <p>
+                  All quizzes, preference cards, and AI suggestions are intended strictly for celebrating friendships and finding thoughtful gift ideas. They do not claim subconscious mind-reading.
+                </p>
+                <h3 className="font-bold text-sm text-pink-300 pt-2">2. Prohibition of Misuse</h3>
+                <p>
+                  Impersonation, abusive submissions, or sharing unconsented private data is strictly forbidden across the platform.
+                </p>
+              </>
+            )
           )}
         </div>
 
@@ -96,10 +137,11 @@ export const InfoModal: React.FC<InfoModalProps> = ({ type, onClose }) => {
             onClick={onClose}
             className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-semibold cursor-pointer"
           >
-            বন্ধ করুন
+            {t.close}
           </button>
         </div>
       </div>
     </div>
   );
 };
+

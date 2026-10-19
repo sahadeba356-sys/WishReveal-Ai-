@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Heart, Sparkles, X, Wand2 } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface FloatingCatWidgetProps {
   onStartQuiz: () => void;
@@ -13,6 +14,7 @@ export const FloatingCatWidget: React.FC<FloatingCatWidgetProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const widgetRef = useRef<HTMLDivElement>(null);
+  const { language, t } = useLanguage();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -49,12 +51,12 @@ export const FloatingCatWidget: React.FC<FloatingCatWidgetProps> = ({
           <div className="flex items-center justify-between pb-2.5 border-b border-white/10">
             <div className="flex items-center gap-2">
               <span className="text-xl">🐱</span>
-              <span className="font-bold text-xs sm:text-sm text-pink-300 font-brand">Meow Reveal AI</span>
+              <span className="font-bold text-xs sm:text-sm text-pink-300 font-brand">{t.catTitle}</span>
             </div>
             <button
               onClick={() => setIsOpen(false)}
               className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              aria-label="পপআপ বন্ধ করুন"
+              aria-label={t.close}
             >
               <X className="w-4 h-4" />
             </button>
@@ -64,11 +66,11 @@ export const FloatingCatWidget: React.FC<FloatingCatWidgetProps> = ({
             <p className="flex items-start gap-1.5">
               <Sparkles className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
               <span>
-                &ldquo;বন্ধুত্বের সবচেয়ে মিষ্টি অনুভূতি হলো যখন আপনি বিনা বলাতেই তার মনের ইচ্ছা বুঝতে পারেন!&rdquo;
+                {t.catQuote}
               </span>
             </p>
             <p className="text-pink-300/80 font-medium">
-              আজ কি আপনার প্রিয় বন্ধুর ইচ্ছা জানতে চান?
+              {language === 'bn' ? 'আজ কি আপনার প্রিয় বন্ধুর ইচ্ছা জানতে চান?' : 'Want to discover what your best friend loves today?'}
             </p>
           </div>
 
@@ -81,7 +83,7 @@ export const FloatingCatWidget: React.FC<FloatingCatWidgetProps> = ({
               className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 active:scale-95 text-white font-bold text-xs shadow-md hover:brightness-110 transition-all flex items-center justify-center gap-1 cursor-pointer min-h-[40px]"
             >
               <Heart className="w-3.5 h-3.5 fill-white" />
-              <span>কুইজ শুরু</span>
+              <span>{t.catStartQuiz}</span>
             </button>
             <button
               onClick={() => {
@@ -91,7 +93,7 @@ export const FloatingCatWidget: React.FC<FloatingCatWidgetProps> = ({
               className="w-full py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/15 active:scale-95 text-slate-200 text-xs font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer min-h-[40px]"
             >
               <Wand2 className="w-3.5 h-3.5 text-purple-300" />
-              <span>ইচ্ছা বক্স</span>
+              <span>{t.catWriteWish}</span>
             </button>
           </div>
         </div>
@@ -111,15 +113,15 @@ export const FloatingCatWidget: React.FC<FloatingCatWidgetProps> = ({
           </div>
 
           <span className="text-[11px] sm:text-xs md:text-sm font-semibold text-pink-200 tracking-wide font-bengali group-hover:text-white transition-colors truncate">
-            তোমার বন্ধুর ইচ্ছা জানার অপেক্ষায়...
+            {language === 'bn' ? 'তোমার বন্ধুর ইচ্ছা জানার অপেক্ষায়...' : 'Waiting to discover your friend’s wishes...'}
           </span>
           <span className="text-pink-400 shrink-0">💖</span>
         </button>
 
         <button
           onClick={() => setIsDismissed(true)}
-          title="বন্ধ করুন"
-          aria-label="উইজেট বন্ধ করুন"
+          title={t.close}
+          aria-label={t.close}
           className="w-8 h-8 rounded-full bg-black/40 text-slate-400 hover:text-slate-200 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
         >
           <X className="w-3.5 h-3.5" />

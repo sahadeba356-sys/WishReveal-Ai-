@@ -18,6 +18,11 @@
   font-family: 'Hind Siliguri', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+body.lang-en,
+body.lang-en .font-bengali {
+  font-family: 'Plus Jakarta Sans', 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
 .font-brand {
   font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
 }

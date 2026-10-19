@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Share2, Copy, Check, MessageCircle, Heart, Sparkles } from 'lucide-react';
+import { X, Share2, Copy, Check } from 'lucide-react';
 import { Quiz } from '../types/backend';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface FriendshipLinkModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ export const FriendshipLinkModal: React.FC<FriendshipLinkModalProps> = ({
   onClose,
   targetQuiz,
 }) => {
+  const { language, t } = useLanguage();
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export const FriendshipLinkModal: React.FC<FriendshipLinkModalProps> = ({
   const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
   const shareToken = targetQuiz?.shareToken || 'sample_token';
   const shareUrl = `${currentOrigin}/#respond?token=${shareToken}`;
-  const quizTitle = targetQuiz?.title || 'ফ্রেন্ডশিপ উইশ কুইজ';
+  const quizTitle = targetQuiz?.title || (language === 'bn' ? 'ফ্রেন্ডশিপ উইশ কুইজ' : 'Friendship Wish Quiz');
 
   const handleCopy = () => {
     navigator.clipboard.writeText(shareUrl);
@@ -44,7 +46,11 @@ export const FriendshipLinkModal: React.FC<FriendshipLinkModalProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const shareText = encodeURIComponent(`✨ আমার ফ্রেন্ডশিপ উইশ কুইজ খেলে জানাও তোমার মনের ইচ্ছা: ${shareUrl}`);
+  const shareText = encodeURIComponent(
+    language === 'bn'
+      ? `✨ আমার ফ্রেন্ডশিপ উইশ কুইজ খেলে জানাও তোমার মনের ইচ্ছা: ${shareUrl}`
+      : `✨ Play my Friendship Wish Quiz and share what you love: ${shareUrl}`
+  );
 
   return (
     <div
@@ -61,12 +67,12 @@ export const FriendshipLinkModal: React.FC<FriendshipLinkModalProps> = ({
               <Share2 className="w-4 h-4" />
             </div>
             <h2 id="share-link-modal-title" className="font-bold text-sm sm:text-base text-white">
-              বন্ধুকে আমন্ত্রণ লিংক পাঠান
+              {language === 'bn' ? 'বন্ধুকে আমন্ত্রণ লিংক পাঠান' : 'Send Invitation Link to Friend'}
             </h2>
           </div>
           <button
             onClick={onClose}
-            aria-label="বন্ধ করুন"
+            aria-label={t.close}
             className="w-8 h-8 rounded-full text-slate-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -76,16 +82,20 @@ export const FriendshipLinkModal: React.FC<FriendshipLinkModalProps> = ({
         {/* Body */}
         <div className="p-5 sm:p-6 space-y-4">
           <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 space-y-1">
-            <span className="text-[10px] text-pink-400 font-semibold block">নির্বাচিত কুইজ:</span>
+            <span className="text-[10px] text-pink-400 font-semibold block">
+              {language === 'bn' ? 'নির্বাচিত কুইজ:' : 'Selected Quiz:'}
+            </span>
             <span className="font-bold text-sm text-white block">{quizTitle}</span>
             <p className="text-[11px] text-slate-300">
-              এই লিংকটি বন্ধুর সাথে শেয়ার করলে সে তার পছন্দ ও ইচ্ছার উত্তর দিতে পারবে।
+              {language === 'bn'
+                ? 'এই লিংকটি বন্ধুর সাথে শেয়ার করলে সে তার পছন্দ ও ইচ্ছার উত্তর দিতে পারবে।'
+                : 'Share this unique link with your friend so they can submit their preferences.'}
             </p>
           </div>
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-300 block">
-              কপি করার জন্য লিংক:
+              {language === 'bn' ? 'কপি করার জন্য লিংক:' : 'Shareable Link:'}
             </label>
             <div className="flex gap-2">
               <input
@@ -100,14 +110,16 @@ export const FriendshipLinkModal: React.FC<FriendshipLinkModalProps> = ({
                 className="px-3.5 py-2 rounded-xl bg-pink-500 hover:bg-pink-600 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors shrink-0"
               >
                 {copied ? <Check className="w-4 h-4 text-white" /> : <Copy className="w-4 h-4" />}
-                <span>{copied ? 'কপি হয়েছে' : 'কপি'}</span>
+                <span>{copied ? (language === 'bn' ? 'কপি হয়েছে' : 'Copied') : (language === 'bn' ? 'কপি' : 'Copy')}</span>
               </button>
             </div>
           </div>
 
           {/* Social Share Buttons */}
           <div className="space-y-2 pt-2">
-            <span className="text-xs font-semibold text-slate-300 block">সরাসরি শেয়ার করুন:</span>
+            <span className="text-xs font-semibold text-slate-300 block">
+              {language === 'bn' ? 'সরাসরি শেয়ার করুন:' : 'Share directly via:'}
+            </span>
             <div className="grid grid-cols-2 gap-2">
               <a
                 href={`https://wa.me/?text=${shareText}`}
@@ -130,7 +142,9 @@ export const FriendshipLinkModal: React.FC<FriendshipLinkModalProps> = ({
           </div>
 
           <p className="text-[11px] text-slate-400 text-center pt-2 border-t border-white/10">
-            🔒 বন্ধু যখনই উত্তর দেবে, আপনি আপনার ড্যাশবোর্ডে তা দেখতে পাবেন।
+            {language === 'bn'
+              ? '🔒 বন্ধু যখনই উত্তর দেবে, আপনি আপনার ড্যাশবোর্ডে তা দেখতে পাবেন।'
+              : '🔒 When your friend submits answers, they will immediately appear on your Dashboard.'}
           </p>
         </div>
       </div>
